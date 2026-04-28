@@ -12,3 +12,5 @@ node_modules/
 dist/
 .vscode/
 .idea/
+"backend/node_modules/"  
+"bus-dot-tracker/backend/node_modules/"  
