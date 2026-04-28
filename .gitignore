@@ -1,0 +1,14 @@
+# Ignore other projects with their own git repos (they cause submodule warnings)
+fleet-platform/
+chatgpt-apps-sdk-nextjs-starter/
+dot-hours-tracker/
+backend/
+
+# Standard ignores
+node_modules/
+.env
+.DS_Store
+*.log
+dist/
+.vscode/
+.idea/
