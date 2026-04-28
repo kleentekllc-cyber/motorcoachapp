@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: fleet-backend
+    env: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Set the following in Render dashboard (do not hardcode secrets):
+      # - SUPABASE_DB_URL
+      # - SUPABASE_SERVICE_ROLE_KEY
+      # - SUPABASE_ANON_KEY
+      # - FRONTEND_ORIGIN
+      # - GOOGLE_MAPS_API_KEY

@@ -1,0 +1,166 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Driver {
+  id              Int              @id @default(autoincrement())
+  name            String
+  email           String?
+  phone           String?
+  status          String
+  employment_type String
+  license_number  String?
+  active          Boolean          @default(true)
+  trips           Trip[]
+  hours           DriverHours[]
+  payStructure    PayStructure?
+  
+  @@map("drivers")
+}
+
+model Vehicle {
+  id           Int      @id @default(autoincrement())
+  name         String
+  type         String
+  capacity     Int
+  plate_number String?
+  active       Boolean  @default(true)
+  trips        Trip[]
+  
+  @@map("vehicles")
+}
+
+model Trip {
+  id                      Int               @id @default(autoincrement())
+  external_reference      String?
+  passenger_name          String
+  group_size              Int
+  pickup_location         String
+  dropoff_location        String
+  pickup_time             DateTime
+  dropoff_time            DateTime?
+  estimated_mileage       Int
+  average_speed           Int
+  pre_trip_minutes        Int
+  post_trip_minutes       Int
+  dump_fuel_clean_minutes Int
+  deadhead_miles          Int
+  relay_required          Boolean           @default(false)
+  hotel_reset_required    Boolean           @default(false)
+  status                  String
+  legality_status         String?
+  driver_id               Int?
+  vehicle_id              Int?
+  
+  // Profitability Fields
+  trip_revenue            Float             @default(0)
+  trip_cost               Float             @default(0)
+  trip_profit             Float             @default(0)
+  trip_margin             Float             @default(0)
+  customer_name           String?
+  route_name              String?
+  
+  // Efficiency Metrics
+  mpg_score               Float             @default(0)
+  deadhead_score          Float             @default(0)
+  driver_cost_score       Float             @default(0)
+  efficiency_score        Float             @default(0)
+  
+  // Risk Metrics
+  weather_risk            Float             @default(0)
+  traffic_risk            Float             @default(0)
+  breakdown_risk          Float             @default(0)
+  risk_score              Float             @default(0)
+
+  driver   Driver?           @relation(fields: [driver_id], references: [id])
+  vehicle  Vehicle?          @relation(fields: [vehicle_id], references: [id])
+  stops    TripStop[]
+  segments TimelineSegment[]
+  
+  @@map("trips")
+}
+
+model TripStop {
+  id               Int    @id @default(autoincrement())
+  trip_id          Int
+  name             String
+  sequence         Int
+  duration_minutes Int
+
+  trip Trip @relation(fields: [trip_id], references: [id], onDelete: Cascade)
+  
+  @@map("trip_stops")
+}
+
+model TimelineSegment {
+  id               Int      @id @default(autoincrement())
+  trip_id          Int
+  type             String
+  start_time       DateTime
+  end_time         DateTime
+  duration_minutes Int
+  dot_status       String
+
+  trip Trip @relation(fields: [trip_id], references: [id], onDelete: Cascade)
+  
+  @@map("timeline_segments")
+}
+
+model DriverHours {
+  id                  Int      @id @default(autoincrement())
+  driver_id           Int
+  date                DateTime
+  on_duty_minutes     Int
+  driving_minutes     Int
+  off_duty_minutes    Int
+  cycle_type          String
+  total_cycle_minutes Int
+
+  driver Driver @relation(fields: [driver_id], references: [id], onDelete: Cascade)
+  
+  @@map("driver_hours")
+}
+
+model PayStructure {
+  id                    Int     @id @default(autoincrement())
+  driver_id             Int     @unique
+  employment_type       String
+  vehicle_type          String?
+  base_percent          Float
+  gratuity_percent      Float
+  safety_bonus_percent  Float
+  weekly_salary         Float?
+  flat_half_day_amount  Float?
+  flat_full_day_amount  Float?
+
+  driver Driver @relation(fields: [driver_id], references: [id], onDelete: Cascade)
+  
+  @@map("pay_structures")
+}
+
+model BonusRule {
+  id        Int   @id @default(autoincrement())
+  type      String
+  min_hours Int
+  max_hours Int?
+  amount    Float
+  
+  @@map("bonus_rules")
+}
+
+model DOTSettings {
+  id                           Int    @id @default(autoincrement())
+  company_name                 String
+  hos_11_hour_limit_minutes    Int
+  hos_14_hour_limit_minutes    Int
+  hos_60_70_hour_limit_minutes Int
+  pre_trip_default_minutes     Int
+  post_trip_default_minutes    Int
+  
+  @@map("dot_settings")
+}

@@ -1,0 +1,2344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus DOT Hours Tracker</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>🚌 DOT Tracker</h2>
+        </div>
+        
+        <!-- Search Bar in Sidebar -->
+        <div class="sidebar-search">
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="globalSearch" class="search-input" placeholder="Search...">
+                <button class="search-clear" id="searchClear" style="display: none;">✖</button>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="#current-status" class="nav-item active">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Status</span>
+            </a>
+            <a href="#hours-summary" class="nav-item">
+                <span class="nav-icon">⏱️</span>
+                <span class="nav-text">Hours</span>
+            </a>
+            <a href="#pay-calculator" class="nav-item">
+                <span class="nav-icon">💰</span>
+                <span class="nav-text">Pay Calculator</span>
+            </a>
+            <a href="#trips-management" class="nav-item">
+                <span class="nav-icon">🚌</span>
+                <span class="nav-text">Trips</span>
+            </a>
+            <a href="#vehicles-management" class="nav-item">
+                <span class="nav-icon">🚐</span>
+                <span class="nav-text">Vehicles</span>
+            </a>
+            <a href="#multi-trip" class="nav-item">
+                <span class="nav-icon">🗓️</span>
+                <span class="nav-text">Trip Planner</span>
+            </a>
+            <a href="#trip-calc" class="nav-item">
+                <span class="nav-icon">📍</span>
+                <span class="nav-text">Trip Calculator</span>
+            </a>
+            <a href="#status-controls" class="nav-item">
+                <span class="nav-icon">🎛️</span>
+                <span class="nav-text">Controls</span>
+            </a>
+            <a href="#duty-log" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span class="nav-text">Duty Log</span>
+            </a>
+            <a href="#settings" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header Bar -->
+        <header class="header-bar">
+            <h1>Bus Driver DOT Hours Tracker</h1>
+            <p class="subtitle">Hours Management & Trip Planning</p>
+        </header>
+
+        <div class="container">
+
+        <!-- Dashboard Title & Date Selector -->
+        <div class="dashboard-title-section">
+            <div>
+                <h1 class="dashboard-title">Dashboard Overview</h1>
+                <p class="dashboard-subtitle">Real-time Hours Tracking & Trip Management</p>
+            </div>
+            <div class="reorder-controls">
+                <button class="reorder-btn" onclick="toggleReorderMode()" id="toggleReorderBtn">
+                    <span>🔀 Reorder Sections</span>
+                </button>
+            </div>
+            <div class="date-selector">
+                <label for="dashboardDate">View Date:</label>
+                <input type="date" id="dashboardDate" class="date-input">
+                <button class="secondary-btn" onclick="setToday()" style="padding: 10px 15px;">Today</button>
+            </div>
+        </div>
+
+        <!-- Fleet Management Stat Cards -->
+        <div class="stat-cards-grid">
+            <div class="stat-card trips-today-stat">
+                <div class="stat-icon">🚌</div>
+                <div class="stat-content">
+                    <div class="stat-label">Trips Today</div>
+                    <div class="stat-value"><span id="statTripsToday">0</span> Scheduled</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-fill" id="statTripsTodayProgress" style="background: #10B981;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card drivers-stat">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <div class="stat-label">Drivers On Duty</div>
+                    <div class="stat-value"><span id="statDriversOnDuty">1</span> Active</div>
+                    <div class="stat-duration">Available for trips</div>
+                </div>
+            </div>
+            <div class="stat-card compliance-stat">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <div class="stat-label">Compliance Status</div>
+                    <div class="stat-value" id="statComplianceRate">100%</div>
+                    <div class="stat-duration" id="statComplianceDetails">All trips legal</div>
+                </div>
+            </div>
+            <div class="stat-card vehicles-stat">
+                <div class="stat-icon">🚐</div>
+                <div class="stat-content">
+                    <div class="stat-label">Fleet Status</div>
+                    <div class="stat-value"><span id="statVehiclesActive">1</span> Available</div>
+                    <div class="stat-duration">Ready for service</div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Trip Legality Overview -->
+        <div class="dashboard-section reorderable-section" data-section-id="trip-legality">
+            <div class="section-header">
+                <h2>🚦 Trip Legality Overview</h2>
+                <button class="secondary-btn" onclick="showSection('multi-trip')">+ Add Trip</button>
+            </div>
+            
+            <!-- Segmented Progress Bar -->
+            <div class="legality-bar-container">
+                <div class="legality-bar">
+                    <div class="legality-segment legal-segment" id="legalSegment" style="width: 0%;">
+                        <span class="segment-label" id="legalSegmentLabel"></span>
+                    </div>
+                    <div class="legality-segment warning-segment" id="warningSegment" style="width: 0%;">
+                        <span class="segment-label" id="warningSegmentLabel"></span>
+                    </div>
+                    <div class="legality-segment illegal-segment" id="illegalSegment" style="width: 0%;">
+                        <span class="segment-label" id="illegalSegmentLabel"></span>
+                    </div>
+                </div>
+                <div class="legality-legend">
+                    <div class="legend-item">
+                        <div class="legend-color legal-color"></div>
+                        <span>Legal</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color warning-color"></div>
+                        <span>Warning</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color illegal-color"></div>
+                        <span>Illegal</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="legality-grid">
+                <div class="legality-card legal-trips">
+                    <div class="legality-number" id="legalCount">0</div>
+                    <div class="legality-label">Legal Trips</div>
+                </div>
+                <div class="legality-card warning-trips">
+                    <div class="legality-number" id="warningCount">0</div>
+                    <div class="legality-label">Needs Adjustment</div>
+                </div>
+                <div class="legality-card illegal-trips">
+                    <div class="legality-number" id="illegalCount">0</div>
+                    <div class="legality-label">Not Possible</div>
+                </div>
+                <div class="legality-card total-trips">
+                    <div class="legality-number" id="totalTripsCount">0</div>
+                    <div class="legality-label">Total Trips</div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Driver Status Overview -->
+        <div class="dashboard-section reorderable-section" data-section-id="driver-status">
+            <div class="section-header">
+                <h2>👤 Driver Status Overview</h2>
+                <button class="secondary-btn" onclick="showSection('status-controls')">Change Status</button>
+            </div>
+            <div class="status-overview-grid">
+                <div class="status-overview-card">
+                    <div class="overview-label">HOS Mode</div>
+                    <div class="overview-value" id="overviewHOSMode">70hr/8 day</div>
+                    <button class="overview-btn" onclick="toggleHOSMode()">Toggle Mode</button>
+                </div>
+                <div class="status-overview-card">
+                    <div class="overview-label">Drive</div>
+                    <div class="overview-value" id="overviewDriverHours">10:00</div>
+                    <div class="overview-status" id="overviewDriverStatus">✅ Available</div>
+                </div>
+                <div class="status-overview-card">
+                    <div class="overview-label">Shift</div>
+                    <div class="overview-value" id="overviewShiftHours">15:00</div>
+                    <div class="overview-status" id="overviewShiftStatus">✅ Available</div>
+                </div>
+                <div class="status-overview-card">
+                    <div class="overview-label">Cycle</div>
+                    <div class="overview-value" id="overviewCycleHours">70:00</div>
+                    <div class="overview-status" id="overviewCycleStatus">✅ Available</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Trips Table -->
+        <div class="dashboard-section reorderable-section" data-section-id="upcoming-trips">
+            <div class="section-header">
+                <h2>📋 Upcoming Trips</h2>
+                <button class="secondary-btn" onclick="showSection('multi-trip')">Manage Trips</button>
+            </div>
+            <div class="trips-table-container">
+                <table class="trips-table">
+                    <thead>
+                        <tr>
+                            <th>Trip #</th>
+                            <th>Date</th>
+                            <th>Distance</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Pay</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tripsTableBody">
+                        <tr class="no-trips-row">
+                            <td colspan="7" style="text-align: center; padding: 40px; color: #6B7280;">
+                                No upcoming trips scheduled. Add trips to get started.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Actions Section -->
+        <div class="dashboard-section reorderable-section" data-section-id="quick-actions">
+            <div class="section-header">
+                <h2>⚡ Quick Actions</h2>
+            </div>
+            <div class="quick-actions-grid">
+                <button class="quick-action-btn create-trip" onclick="showSection('multi-trip')">
+                    <div class="quick-action-icon">➕</div>
+                    <div class="quick-action-label">Create Trip</div>
+                    <div class="quick-action-desc">Schedule new trip</div>
+                </button>
+                <button class="quick-action-btn hos-check" onclick="showSection('trip-calc')">
+                    <div class="quick-action-icon">🧮</div>
+                    <div class="quick-action-label">Run HOS Check</div>
+                    <div class="quick-action-desc">Verify DOT compliance</div>
+                </button>
+                <button class="quick-action-btn add-driver" onclick="alert('Driver management coming soon!')">
+                    <div class="quick-action-icon">👤</div>
+                    <div class="quick-action-label">Add Driver</div>
+                    <div class="quick-action-desc">Manage driver roster</div>
+                </button>
+                <button class="quick-action-btn add-vehicle" onclick="alert('Vehicle management coming soon!')">
+                    <div class="quick-action-icon">🚐</div>
+                    <div class="quick-action-label">Add Vehicle</div>
+                    <div class="quick-action-desc">Manage fleet vehicles</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Trips Management Section -->
+        <div class="trips-management reorderable-section" data-section-id="trips-management">
+            <div class="trips-header">
+                <h1 class="trips-title">🚌 Trips Management</h1>
+                <button class="add-trip-btn" onclick="showCreateTripForm()">➕ Create New Trip</button>
+            </div>
+
+            <!-- Trips List Table -->
+            <div class="trips-section-card">
+                <h3>📋 All Trips</h3>
+                <div class="trips-table-container">
+                    <table class="trips-table">
+                        <thead>
+                            <tr>
+                                <th>Trip #</th>
+                                <th>Date</th>
+                                <th>Passenger/Group</th>
+                                <th>Pickup → Dropoff</th>
+                                <th>Distance</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Pay</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tripsManagementTableBody">
+                            <tr class="no-trips-row">
+                                <td colspan="9" style="text-align: center; padding: 40px; color: #6B7280;">
+                                    No trips in system. Click "Create New Trip" to get started.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Create/Edit Trip Form -->
+            <div class="trips-section-card hidden" id="createTripForm">
+                <div class="form-header">
+                    <h3 id="formTitle">➕ Create New Trip</h3>
+                    <button class="secondary-btn" onclick="cancelTripForm()">✖ Cancel</button>
+                </div>
+
+                <!-- Passenger/Group Info -->
+                <div class="form-section">
+                    <h4>👥 Passenger / Group Information</h4>
+                    <div class="trip-input-grid">
+                        <div class="input-group">
+                            <label for="trip_passengerName">Passenger/Group Name <span class="required">*</span></label>
+                            <input type="text" id="trip_passengerName" class="hos-input" placeholder="Enter name or group">
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_passengerCount">Passenger Count</label>
+                            <input type="number" id="trip_passengerCount" class="hos-input" placeholder="Number of passengers" min="1">
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_contactPhone">Contact Phone</label>
+                            <input type="tel" id="trip_contactPhone" class="hos-input" placeholder="(555) 123-4567">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pickup / Dropoff Info -->
+                <div class="form-section">
+                    <h4>📍 Pickup / Dropoff Information</h4>
+                    <div class="trip-input-grid">
+                        <div class="input-group">
+                            <label for="trip_pickupLocation">Pickup Location <span class="required">*</span></label>
+                            <input type="text" id="trip_pickupLocation" class="hos-input" placeholder="Enter pickup address">
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_pickupTimeNew">Pickup Time <span class="required">*</span></label>
+                            <input type="time" id="trip_pickupTimeNew" class="hos-input">
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_dropoffLocation">Dropoff Location <span class="required">*</span></label>
+                            <input type="text" id="trip_dropoffLocation" class="hos-input" placeholder="Enter dropoff address">
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_dropoffTimeNew">Dropoff Time <span class="required">*</span></label>
+                            <input type="time" id="trip_dropoffTimeNew" class="hos-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mileage / Speed -->
+                <div class="form-section">
+                    <h4>🚗 Mileage / Speed</h4>
+                    <div class="trip-input-grid">
+                        <div class="input-group">
+                            <label for="trip_milesNew">Trip Distance (mi) <span class="required">*</span></label>
+                            <input type="number" id="trip_milesNew" class="hos-input" placeholder="Miles" min="1" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_avgSpeedNew">Average Speed (MPH) <span class="required">*</span></label>
+                            <input type="number" id="trip_avgSpeedNew" class="hos-input" placeholder="Speed" value="60" min="1" max="100">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stops -->
+                <div class="form-section">
+                    <h4>⏸️ Passenger Stops</h4>
+                    <div class="trip-input-grid">
+                        <div class="input-group">
+                            <label for="trip_stopMinutes">Stop Duration (min)</label>
+                            <input type="number" id="trip_stopMinutes" class="hos-input" placeholder="0" min="0" step="5">
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_stopLocation">Stop Location(s)</label>
+                            <input type="text" id="trip_stopLocation" class="hos-input" placeholder="Optional stop locations">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dump / Fuel / Clean -->
+                <div class="form-section">
+                    <h4>⛽ Dump / Fuel / Clean</h4>
+                    <div class="trip-input-grid">
+                        <div class="input-group">
+                            <label for="trip_dumpFuelMinutes">Service Duration (min)</label>
+                            <input type="number" id="trip_dumpFuelMinutes" class="hos-input" placeholder="0" min="0" step="5">
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_serviceLocation">Service Location</label>
+                            <input type="text" id="trip_serviceLocation" class="hos-input" placeholder="Fuel station, dump site">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deadhead (Front & Back End) -->
+                <div class="form-section">
+                    <h4>🚛 Deadhead (Empty Miles)</h4>
+                    <p style="color: #6B7280; font-size: 0.9em; margin-bottom: 15px;">Front-end: Empty driving TO pickup | Back-end: Empty driving AFTER drop-off</p>
+                    <div class="trip-input-grid">
+                        <div class="input-group">
+                            <label for="trip_frontDeadheadMiles">Front-End Deadhead Miles</label>
+                            <input type="number" id="trip_frontDeadheadMiles" class="hos-input" placeholder="0" min="0" step="0.1">
+                            <small style="color: #6B7280; font-size: 0.85em;">Empty miles before passenger pickup</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_frontDeadheadSpeed">Front-End Speed (MPH)</label>
+                            <input type="number" id="trip_frontDeadheadSpeed" class="hos-input" placeholder="60" min="1" max="100" value="60">
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_backDeadheadMiles">Back-End Deadhead Miles</label>
+                            <input type="number" id="trip_backDeadheadMiles" class="hos-input" placeholder="0" min="0" step="0.1">
+                            <small style="color: #6B7280; font-size: 0.85em;">Empty miles after passenger drop-off</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_backDeadheadSpeed">Back-End Speed (MPH)</label>
+                            <input type="number" id="trip_backDeadheadSpeed" class="hos-input" placeholder="60" min="1" max="100" value="60">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Relay (Front & Back End) -->
+                <div class="form-section">
+                    <h4>🔄 Driver Relay</h4>
+                    <p style="color: #6B7280; font-size: 0.9em; margin-bottom: 15px;">Front-end: Driver handoff BEFORE trip | Back-end: Driver handoff AFTER trip</p>
+                    <div class="trip-input-grid">
+                        <div class="input-group" style="display: flex; align-items: center;">
+                            <label style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="trip_frontRelayRequired" style="width: 20px; height: 20px;">
+                                <span style="font-weight: 600;">Front-End Relay Required</span>
+                            </label>
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_frontRelayLocation">Front-End Relay Location</label>
+                            <input type="text" id="trip_frontRelayLocation" class="hos-input" placeholder="Driver handoff before trip">
+                            <small style="color: #6B7280; font-size: 0.85em;">Where first driver hands off</small>
+                        </div>
+                        <div class="input-group" style="display: flex; align-items: center;">
+                            <label style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="trip_backRelayRequired" style="width: 20px; height: 20px;">
+                                <span style="font-weight: 600;">Back-End Relay Required</span>
+                            </label>
+                        </div>
+                        <div class="input-group">
+                            <label for="trip_backRelayLocation">Back-End Relay Location</label>
+                            <input type="text" id="trip_backRelayLocation" class="hos-input" placeholder="Driver handoff after trip">
+                            <small style="color: #6B7280; font-size: 0.85em;">Where second driver takes over</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Trip Button -->
+                <div class="form-actions">
+                    <button class="add-trip-btn" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);" onclick="saveTripFromForm()">
+                        💾 Save Trip
+                    </button>
+                    <button class="secondary-btn" onclick="cancelTripForm()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicles Management Section -->
+        <div class="vehicles-management reorderable-section" data-section-id="vehicles-management">
+            <div class="vehicles-header">
+                <h1 class="vehicles-title">🚐 Vehicles Management</h1>
+                <button class="add-trip-btn" onclick="showCreateVehicleForm()">➕ Add New Vehicle</button>
+            </div>
+
+            <!-- Vehicles List -->
+            <div class="vehicles-section-card">
+                <h3>📋 Fleet Vehicles</h3>
+                <div class="vehicles-grid" id="vehiclesGrid">
+                    <!-- Default vehicle -->
+                    <div class="vehicle-card" onclick="viewVehicleProfile(1)">
+                        <div class="vehicle-header">
+                            <div class="vehicle-icon">🚌</div>
+                            <div class="vehicle-status-dot active" title="Available"></div>
+                        </div>
+                        <div class="vehicle-info">
+                            <h4>Bus #001</h4>
+                            <div class="vehicle-detail">Type: <strong>Motorcoach</strong></div>
+                            <div class="vehicle-detail">Capacity: <strong>55 passengers</strong></div>
+                            <div class="vehicle-detail">Status: <strong style="color: #10B981;">Available</strong></div>
+                        </div>
+                        <div class="vehicle-actions">
+                            <button class="vehicle-action-btn" onclick="event.stopPropagation(); viewVehicleProfile(1)" title="View">👁️ View</button>
+                            <button class="vehicle-action-btn" onclick="event.stopPropagation(); editVehicle(1)" title="Edit">✏️ Edit</button>
+                            <button class="vehicle-action-btn" onclick="event.stopPropagation(); assignDriver(1)" title="Assign Driver">👤 Assign</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicle Profile Display -->
+            <div class="trips-section-card hidden" id="vehicleProfile">
+                <div class="form-header">
+                    <h3 id="vehicleProfileTitle">🚐 Vehicle Profile</h3>
+                    <button class="secondary-btn" onclick="closeVehicleProfile()">✖ Close</button>
+                </div>
+
+                <!-- Vehicle Profile Sections -->
+                <div class="vehicle-profile-grid">
+                    <!-- Type & Specifications -->
+                    <div class="profile-section">
+                        <h4>🚐 Vehicle Type & Specifications</h4>
+                        <div class="profile-detail-row">
+                            <span class="profile-label">Vehicle ID:</span>
+                            <span class="profile-value" id="profile_vehicleId">-</span>
+                        </div>
+                        <div class="profile-detail-row">
+                            <span class="profile-label">Type:</span>
+                            <span class="profile-value" id="profile_type">-</span>
+                        </div>
+                        <div class="profile-detail-row">
+                            <span class="profile-label">Make/Model:</span>
+                            <span class="profile-value" id="profile_makeModel">-</span>
+                        </div>
+                        <div class="profile-detail-row">
+                            <span class="profile-label">Year:</span>
+                            <span class="profile-value" id="profile_year">-</span>
+                        </div>
+                        <div class="profile-detail-row">
+                            <span class="profile-label">License Plate:</span>
+                            <span class="profile-value" id="profile_plate">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Capacity -->
+                    <div class="profile-section">
+                        <h4>👥 Capacity Information</h4>
+                        <div class="profile-detail-row">
+                            <span class="profile-label">Passenger Capacity:</span>
+                            <span class="profile-value" id="profile_capacity">-</span>
+                        </div>
+                        <div class="profile-detail-row">
+                            <span class="profile-label">Wheelchair Accessible:</span>
+                            <span class="profile-value" id="profile_wheelchair">-</span>
+                        </div>
+                        <div class="profile-detail-row">
+                            <span class="profile-label">Luggage Bays:</span>
+                            <span class="profile-value" id="profile_luggage">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Maintenance -->
+                    <div class="profile-section">
+                        <h4>🔧 Maintenance Status</h4>
+                        <div class="profile-detail-row">
+                            <span class="profile-label">Last Inspection:</span>
+                            <span class="profile-value" id="profile_lastInspection">-</span>
+                        </div>
+                        <div class="profile-detail-row">
+                            <span class="profile-label">Next Due:</span>
+                            <span class="profile-value" id="profile_nextInspection">-</span>
+                        </div>
+                        <div class="profile-detail-row">
+                            <span class="profile-label">Mileage:</span>
+                            <span class="profile-value" id="profile_mileage">-</span>
+                        </div>
+                        <div class="profile-detail-row">
+                            <span class="profile-label">Status:</span>
+                            <span class="profile-value" id="profile_maintenanceStatus">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Assigned Trips -->
+                    <div class="profile-section">
+                        <h4>📋 Assigned Trips</h4>
+                        <div id="profile_assignedTrips">
+                            <div class="profile-detail-row">
+                                <span style="color: #6B7280;">No trips currently assigned</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create/Edit Vehicle Form -->
+            <div class="trips-section-card hidden" id="createVehicleForm">
+                <div class="form-header">
+                    <h3 id="vehicleFormTitle">➕ Add New Vehicle</h3>
+                    <button class="secondary-btn" onclick="cancelVehicleForm()">✖ Cancel</button>
+                </div>
+
+                <!-- Vehicle Info Section -->
+                <div class="form-section">
+                    <h4>🚐 Vehicle Information</h4>
+                    <div class="trip-input-grid">
+                        <div class="input-group">
+                            <label for="vehicle_id">Vehicle ID <span class="required">*</span></label>
+                            <input type="text" id="vehicle_id" class="hos-input" placeholder="e.g., Bus #001">
+                        </div>
+                        <div class="input-group">
+                            <label for="vehicle_type">Vehicle Type <span class="required">*</span></label>
+                            <select id="vehicle_type" class="hos-input">
+                                <option value="motorcoach">Motorcoach</option>
+                                <option value="minibus">Minibus</option>
+                                <option value="van">Van</option>
+                                <option value="sedan">Sedan</option>
+                                <option value="suv">SUV</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="vehicle_make">Make/Model</label>
+                            <input type="text" id="vehicle_make" class="hos-input" placeholder="e.g., Prevost H3-45">
+                        </div>
+                        <div class="input-group">
+                            <label for="vehicle_year">Year</label>
+                            <input type="number" id="vehicle_year" class="hos-input" placeholder="2024" min="1990" max="2030">
+                        </div>
+                        <div class="input-group">
+                            <label for="vehicle_plate">License Plate</label>
+                            <input type="text" id="vehicle_plate" class="hos-input" placeholder="ABC-1234">
+                        </div>
+                        <div class="input-group">
+                            <label for="vehicle_capacity">Passenger Capacity <span class="required">*</span></label>
+                            <input type="number" id="vehicle_capacity" class="hos-input" placeholder="Number of seats" min="1">
+                        </div>
+                        <div class="input-group" style="display: flex; align-items: center;">
+                            <label style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="vehicle_wheelchair" style="width: 20px; height: 20px;">
+                                <span style="font-weight: 600;">Wheelchair Accessible</span>
+                            </label>
+                        </div>
+                        <div class="input-group">
+                            <label for="vehicle_luggage">Luggage Bays</label>
+                            <input type="number" id="vehicle_luggage" class="hos-input" placeholder="Number of bays" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maintenance Section -->
+                <div class="form-section">
+                    <h4>🔧 Maintenance Information</h4>
+                    <div class="trip-input-grid">
+                        <div class="input-group">
+                            <label for="vehicle_lastInspection">Last Inspection Date</label>
+                            <input type="date" id="vehicle_lastInspection" class="hos-input">
+                        </div>
+                        <div class="input-group">
+                            <label for="vehicle_mileage">Current Mileage</label>
+                            <input type="number" id="vehicle_mileage" class="hos-input" placeholder="Total miles" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Vehicle Button -->
+                <div class="form-actions">
+                    <button class="add-trip-btn" style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);" onclick="saveVehicle()">
+                        💾 Save Vehicle
+                    </button>
+                    <button class="secondary-btn" onclick="cancelVehicleForm()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Sections (accessible via sidebar) -->
+        <div id="current-status" class="hidden-section" style="display: none;">
+        <!-- Current Status Section -->
+        <div class="current-status">
+            <h2>Current Status</h2>
+            <div class="status-display">
+                <div class="status-item active" id="currentStatus">
+                    <span class="status-label">Status:</span>
+                    <span class="status-value" id="statusValue">Off Duty</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Duration:</span>
+                    <span class="status-value" id="durationValue">0H 0M</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">HOS Mode:</span>
+                    <span class="status-value" id="hosModeValue">70HR/8Day</span>
+                    <button class="toggle-btn" onclick="toggleHOSMode()">Toggle Mode</button>
+                </div>
+            </div>
+        </div>
+        </div>
+
+
+        <!-- Hours Summary Cards -->
+        <div class="hours-summary reorderable-section" data-section-id="hours-summary">
+            <h2>Hours Summary</h2>
+            <div class="hours-grid">
+                <div class="hours-card driving">
+                    <div class="card-header">
+                        <h3>Driving Hours</h3>
+                        <span class="limit">10-Hour Limit</span>
+                    </div>
+                    <div class="hours-value">
+                        <span id="drivingHours">0.0</span>
+                        <span class="unit">HRS</span>
+                    </div>
+                    <div class="remaining">
+                        Remaining: <span id="drivingRemaining">10.0</span> HRS
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="drivingProgress"></div>
+                    </div>
+                </div>
+
+                <div class="hours-card duty">
+                    <div class="card-header">
+                        <h3>On-Duty Hours</h3>
+                        <span class="limit">15-Hour Limit</span>
+                    </div>
+                    <div class="hours-value">
+                        <span id="dutyHours">0.0</span>
+                        <span class="unit">HRS</span>
+                    </div>
+                    <div class="remaining">
+                        Remaining: <span id="dutyRemaining">15.0</span> HRS
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="dutyProgress"></div>
+                    </div>
+                </div>
+
+                <div class="hours-card break">
+                    <div class="card-header">
+                        <h3>Break Status</h3>
+                        <span class="limit">30-Min Required</span>
+                    </div>
+                    <div class="hours-value">
+                        <span id="timeSinceBreak">0.0</span>
+                        <span class="unit">HRS</span>
+                    </div>
+                    <div class="remaining">
+                        Since Last Break
+                    </div>
+                    <div class="break-warning hidden" id="breakWarning">
+                        ⚠️ Break required!
+                    </div>
+                </div>
+
+                <div class="hours-card weekly">
+                    <div class="card-header">
+                        <h3>Weekly Hours</h3>
+                        <span class="limit" id="weeklyLimit">70-Hour/8-Day</span>
+                    </div>
+                    <div class="hours-value">
+                        <span id="weeklyHours">0.0</span>
+                        <span class="unit">HRS</span>
+                    </div>
+                    <div class="remaining">
+                        Remaining: <span id="weeklyRemaining">70.0</span> HRS
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="weeklyProgress"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reset Information -->
+            <div class="reset-info info" id="resetInfo">
+                <strong>ℹ️ Reset Information:</strong><br>
+                Need 34 consecutive hours off-duty for a full restart.
+            </div>
+        </div>
+
+        <!-- Driver Pay Calculator Section -->
+        <div class="pay-calculator-new reorderable-section" data-section-id="pay-calculator">
+            <div class="pay-calc-header">
+                <h1 class="calc-title">💰 Driver Pay Calculator</h1>
+                <p class="calc-subtitle">Comprehensive earnings calculator with smart insights</p>
+            </div>
+
+            <!-- Pay Overview Card -->
+            <div class="calc-card">
+                <h3>📊 Pay Overview</h3>
+                <div class="pay-overview-grid">
+                    <div class="pay-overview-card full-time-card">
+                        <div class="overview-header">
+                            <div class="overview-icon">💼</div>
+                            <h4>Full Time Chauffeur</h4>
+                        </div>
+                        <div class="overview-content">
+                            <div class="overview-salary">$400/week</div>
+                            <div class="overview-items">
+                                <div class="overview-item">✓ Weekly Salary Guaranteed</div>
+                                <div class="overview-item">✓ 12-24% Trip Revenue Share</div>
+                                <div class="overview-item">✓ Safety Bonus Eligible</div>
+                                <div class="overview-item">✓ Deadhead & Relay Pay</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pay-overview-card part-time-card">
+                        <div class="overview-header">
+                            <div class="overview-icon">⏰</div>
+                            <h4>Part Time Chauffeur</h4>
+                        </div>
+                        <div class="overview-content">
+                            <div class="overview-salary">Per-Trip Only</div>
+                            <div class="overview-items">
+                                <div class="overview-item">✓ No Weekly Commitment</div>
+                                <div class="overview-item">✓ 28-34% Trip Revenue Share</div>
+                                <div class="overview-item">✓ Flat Rates For Day Trips</div>
+                                <div class="overview-item">✓ Safety Bonus Eligible</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pay Detail Tables -->
+            <div class="calc-card">
+                <h3>📋 Pay Detail Breakdown</h3>
+                <div class="pay-detail-tabs">
+                    <button class="pay-tab active" onclick="showPayTab('fullTimeDetail')">Full-Time Rates</button>
+                    <button class="pay-tab" onclick="showPayTab('partTimeDetail')">Part-Time Rates</button>
+                </div>
+                
+                <!-- Full-Time Detail -->
+                <div class="pay-detail-content" id="fullTimeDetail">
+                    <table class="pay-detail-table">
+                        <thead>
+                            <tr>
+                                <th>Trip Type</th>
+                                <th>Weekly Salary</th>
+                                <th>Base %</th>
+                                <th>Gratuity %</th>
+                                <th>Safety %</th>
+                                <th>Total %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Contract/Flat</strong></td>
+                                <td>$400</td>
+                                <td>12%</td>
+                                <td>-</td>
+                                <td>4%</td>
+                                <td class="total-cell">16%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Retail w/ Gratuity</strong></td>
+                                <td>$400</td>
+                                <td>-</td>
+                                <td>20%</td>
+                                <td>4%</td>
+                                <td class="total-cell">24%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🚛 Deadhead Under 4 Hrs</strong></td>
+                                <td>-</td>
+                                <td>$50</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$100</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🚛 Deadhead Under 8 Hrs</strong></td>
+                                <td>-</td>
+                                <td>$150</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$200</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🚛 Deadhead Over 9 Hrs</strong></td>
+                                <td>-</td>
+                                <td>$250</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$300</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🔄 Relay Under 6 Hrs</strong></td>
+                                <td>-</td>
+                                <td>$150</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$200</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🔄 Relay Over 6 Hrs</strong></td>
+                                <td>-</td>
+                                <td>$275</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$325</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Part-Time Detail -->
+                <div class="pay-detail-content hidden" id="partTimeDetail">
+                    <table class="pay-detail-table">
+                        <thead>
+                            <tr>
+                                <th>Vehicle/Trip Type</th>
+                                <th>Base %</th>
+                                <th>Gratuity %</th>
+                                <th>Safety %</th>
+                                <th>Total %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Sedan/SUV Retail</strong></td>
+                                <td>10%</td>
+                                <td>20%</td>
+                                <td>4%</td>
+                                <td class="total-cell">34%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Van/Motorcoach Retail</strong></td>
+                                <td>8%</td>
+                                <td>20%</td>
+                                <td>4%</td>
+                                <td class="total-cell">32%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Half Day / Flat or Contract Rate (under 6 HRS)</strong></td>
+                                <td>$150</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$200</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Full Day / Flat or Contract Rate (over 6 HRS)</strong></td>
+                                <td>$275</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$325</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🚛 Deadhead Under 4 Hrs</strong></td>
+                                <td>$50</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$100</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🚛 Deadhead Under 8 Hrs</strong></td>
+                                <td>$150</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$200</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🚛 Deadhead Over 9 Hrs</strong></td>
+                                <td>$250</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$300</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🔄 Relay Under 6 Hrs</strong></td>
+                                <td>$150</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$200</td>
+                            </tr>
+                            <tr>
+                                <td><strong>🔄 Relay Over 6 Hrs</strong></td>
+                                <td>$275</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$325</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Vehicle Relocation</strong></td>
+                                <td>$50</td>
+                                <td>N/A</td>
+                                <td>$50</td>
+                                <td class="total-cell">$100</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pay Type Card -->
+            <div class="calc-card">
+                <h3>👤 Select Pay Type</h3>
+                <div class="pay-type-selector">
+                    <button class="pay-type-btn active" id="fullTimeBtn" onclick="selectPayType('full-time')">
+                        <div class="pay-type-icon">💼</div>
+                        <div class="pay-type-label">Full Time Chauffeur</div>
+                        <div class="pay-type-detail">$400/week + trip share</div>
+                    </button>
+                    <button class="pay-type-btn" id="partTimeBtn" onclick="selectPayType('part-time')">
+                        <div class="pay-type-icon">⏰</div>
+                        <div class="pay-type-label">Part Time Chauffeur</div>
+                        <div class="pay-type-detail">Trip-based pay only</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Weekly Salary Card (Full-Time Only) -->
+            <div class="calc-card" id="weeklySalaryCard">
+                <h3>💵 Weekly Salary (Full-Time)</h3>
+                <div class="salary-display">
+                    <div class="salary-amount">$400.00</div>
+                    <div class="salary-note">Guaranteed Weekly Base Salary For Full Time Chauffeurs</div>
+                </div>
+            </div>
+
+            <!-- Base Rate / Gratuity / Safety Bonus Card -->
+            <div class="calc-card">
+                <h3>📊 Rate Structure</h3>
+                <div id="fullTimeRates">
+                    <div class="rate-selector">
+                        <label>
+                            <input type="radio" name="ftTripType" value="contract" checked onchange="updateRateDisplay()">
+                            <div class="rate-option">
+                                <div class="rate-title">Contract/Flat Rate</div>
+                                <div class="rate-breakdown">
+                                    <span class="rate-item">Base: 12%</span>
+                                    <span class="rate-item">Safety: 4%</span>
+                                    <span class="rate-total">Total: 16%</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label>
+                            <input type="radio" name="ftTripType" value="retail" onchange="updateRateDisplay()">
+                            <div class="rate-option">
+                                <div class="rate-title">Retail with Gratuity</div>
+                                <div class="rate-breakdown">
+                                    <span class="rate-item">Gratuity: 20%</span>
+                                    <span class="rate-item">Safety: 4%</span>
+                                    <span class="rate-total">Total: 24%</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Front-End Deadhead Rates -->
+                    <h4 style="margin: 25px 0 15px 0; color: #059669;">🚛 Front-End Deadhead Rates</h4>
+                    <div class="rate-grid">
+                        <label class="rate-card">
+                            <input type="radio" name="ftDeadheadType" value="under4">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚛</div>
+                                <div class="rate-title">Under 4 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $50 + Safety: $50 = <strong>$100</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="ftDeadheadType" value="under8">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚛</div>
+                                <div class="rate-title">Under 8 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $150 + Safety: $50 = <strong>$200</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="ftDeadheadType" value="over9">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚛</div>
+                                <div class="rate-title">Over 9 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $250 + Safety: $50 = <strong>$300</strong>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Back-End Deadhead Rates -->
+                    <h4 style="margin: 25px 0 15px 0; color: #059669;">🚛 Back-End Deadhead Rates</h4>
+                    <div class="rate-grid">
+                        <label class="rate-card">
+                            <input type="radio" name="ftBackDeadheadType" value="under4">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚛</div>
+                                <div class="rate-title">Under 4 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $50 + Safety: $50 = <strong>$100</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="ftBackDeadheadType" value="under8">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚛</div>
+                                <div class="rate-title">Under 8 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $150 + Safety: $50 = <strong>$200</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="ftBackDeadheadType" value="over9">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚛</div>
+                                <div class="rate-title">Over 9 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $250 + Safety: $50 = <strong>$300</strong>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Front-End Relay Rates -->
+                    <h4 style="margin: 25px 0 15px 0; color: #7C3AED;">🔄 Front-End Relay Rates</h4>
+                    <div class="rate-grid">
+                        <label class="rate-card">
+                            <input type="radio" name="ftRelayType" value="under6">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🔄</div>
+                                <div class="rate-title">Under 6 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $150 + Safety: $50 = <strong>$200</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="ftRelayType" value="over6">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🔄</div>
+                                <div class="rate-title">Over 6 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $275 + Safety: $50 = <strong>$325</strong>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Back-End Relay Rates -->
+                    <h4 style="margin: 25px 0 15px 0; color: #7C3AED;">🔄 Back-End Relay Rates</h4>
+                    <div class="rate-grid">
+                        <label class="rate-card">
+                            <input type="radio" name="ftBackRelayType" value="under6">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🔄</div>
+                                <div class="rate-title">Under 6 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $150 + Safety: $50 = <strong>$200</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="ftBackRelayType" value="over6">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🔄</div>
+                                <div class="rate-title">Over 6 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $275 + Safety: $50 = <strong>$325</strong>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div id="partTimeRates" class="hidden">
+                    <div class="rate-grid">
+                        <label class="rate-card">
+                            <input type="radio" name="ptVehicle" value="sedan-suv" checked onchange="updateRateDisplay()">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚗</div>
+                                <div class="rate-title">Sedan/SUV</div>
+                                <div class="rate-breakdown-small">
+                                    Base: 10% + Gratuity: 20% + Safety: 4% = <strong>34%</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="ptVehicle" value="van-motorcoach" onchange="updateRateDisplay()">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚐</div>
+                                <div class="rate-title">Van/Motorcoach</div>
+                                <div class="rate-breakdown-small">
+                                    Base: 8% + Gratuity: 20% + Safety: 4% = <strong>32%</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="ptVehicle" value="half-day" onchange="updateRateDisplay()">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🕐</div>
+                                <div class="rate-title">Half Day (≤6h)</div>
+                                <div class="rate-breakdown-small">
+                                    $150 + Safety: $50 = <strong>$200</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="ptVehicle" value="full-day" onchange="updateRateDisplay()">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🕘</div>
+                                <div class="rate-title">Full Day (>6h)</div>
+                                <div class="rate-breakdown-small">
+                                    $275 + Safety: $50 = <strong>$325</strong>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Front-End Deadhead Rates -->
+                    <h4 style="margin: 25px 0 15px 0; color: #059669;">🚛 Front-End Deadhead Rates</h4>
+                    <div class="rate-grid">
+                        <label class="rate-card">
+                            <input type="radio" name="deadheadType" value="under4" checked>
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚛</div>
+                                <div class="rate-title">Under 4 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $50 + Safety: $50 = <strong>$100</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="deadheadType" value="under8">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚛</div>
+                                <div class="rate-title">Under 8 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $150 + Safety: $50 = <strong>$200</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="deadheadType" value="over9">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚛</div>
+                                <div class="rate-title">Over 9 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $250 + Safety: $50 = <strong>$300</strong>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Back-End Deadhead Rates -->
+                    <h4 style="margin: 25px 0 15px 0; color: #059669;">🚛 Back-End Deadhead Rates</h4>
+                    <div class="rate-grid">
+                        <label class="rate-card">
+                            <input type="radio" name="ptBackDeadheadType" value="under4">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚛</div>
+                                <div class="rate-title">Under 4 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $50 + Safety: $50 = <strong>$100</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="ptBackDeadheadType" value="under8">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚛</div>
+                                <div class="rate-title">Under 8 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $150 + Safety: $50 = <strong>$200</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="ptBackDeadheadType" value="over9">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚛</div>
+                                <div class="rate-title">Over 9 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $250 + Safety: $50 = <strong>$300</strong>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Front-End Relay Rates -->
+                    <h4 style="margin: 25px 0 15px 0; color: #7C3AED;">🔄 Front-End Relay Rates</h4>
+                    <div class="rate-grid">
+                        <label class="rate-card">
+                            <input type="radio" name="relayType" value="under6" checked>
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🔄</div>
+                                <div class="rate-title">Under 6 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $150 + Safety: $50 = <strong>$200</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="relayType" value="over6">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🔄</div>
+                                <div class="rate-title">Over 6 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $275 + Safety: $50 = <strong>$325</strong>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Back-End Relay Rates -->
+                    <h4 style="margin: 25px 0 15px 0; color: #7C3AED;">🔄 Back-End Relay Rates</h4>
+                    <div class="rate-grid">
+                        <label class="rate-card">
+                            <input type="radio" name="ptBackRelayType" value="under6">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🔄</div>
+                                <div class="rate-title">Under 6 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $150 + Safety: $50 = <strong>$200</strong>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="rate-card">
+                            <input type="radio" name="ptBackRelayType" value="over6">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🔄</div>
+                                <div class="rate-title">Over 6 Hrs</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $275 + Safety: $50 = <strong>$325</strong>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Vehicle Relocation -->
+                    <h4 style="margin: 25px 0 15px 0; color: #EC4899;">🚗 Vehicle Relocation</h4>
+                    <div class="rate-grid">
+                        <label class="rate-card">
+                            <input type="radio" name="ptVehicleRelocation" value="relocation">
+                            <div class="rate-card-content">
+                                <div class="rate-icon">🚗</div>
+                                <div class="rate-title">Vehicle Relocation</div>
+                                <div class="rate-breakdown-small">
+                                    Base: $50 + Safety: $50 = <strong>$100</strong>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Trip Pay Calculator Inputs -->
+            <div class="calc-card">
+                <h3>🧮 Calculate Trip Pay</h3>
+                <div class="pay-input-section">
+                    <div class="trip-input-grid">
+                        <div class="input-group" id="payRevenueInput">
+                            <label for="pay_revenue">Trip Revenue ($) <span class="required">*</span></label>
+                            <input type="number" id="pay_revenue" class="hos-input" placeholder="Enter trip revenue" min="0" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label for="pay_deadheadHours">Deadhead Hours</label>
+                            <input type="number" id="pay_deadheadHours" class="hos-input" placeholder="0.0" min="0" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label for="pay_relayHours">Relay Hours</label>
+                            <input type="number" id="pay_relayHours" class="hos-input" placeholder="0.0" min="0" step="0.1">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 20px; padding: 15px; background: #F9FAFB; border-radius: 8px; align-items: center;">
+                        <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="pay_safety" checked style="width: auto; margin-right: 8px;">
+                            Safety/Compliance Eligible
+                        </label>
+                        <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="pay_frontEndDeadheadIncluded" style="width: auto; margin-right: 8px;">
+                            🚛 Front-End Deadhead
+                        </label>
+                        <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="pay_backEndDeadheadIncluded" style="width: auto; margin-right: 8px;">
+                            🚛 Back-End Deadhead
+                        </label>
+                        <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="pay_frontEndRelayIncluded" style="width: auto; margin-right: 8px;">
+                            🔄 Front-End Relay
+                        </label>
+                        <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="pay_backEndRelayIncluded" style="width: auto; margin-right: 8px;">
+                            🔄 Back-End Relay
+                        </label>
+                        <button onclick="calculatePayNew()" style="margin: 0; padding: 8px 16px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9em; white-space: nowrap;">💵 Calculate Pay</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pay Results -->
+            <div class="calc-card hidden" id="payResultsNew">
+                <h3>💰 Pay Breakdown</h3>
+                <div id="payBreakdownNew"></div>
+            </div>
+        </div>
+
+
+        <!-- Multi-Trip Planner Section -->
+        <div class="multi-trip-planner reorderable-section" data-section-id="multi-trip-planner">
+            <h2>🗓️ Multi-Trip Planner (Up to 2 Weeks)</h2>
+            <p class="planner-description">Plan multiple trips and see when you'll need rest periods and 34-hour restarts</p>
+            
+            <div class="trip-input-section">
+                <h3>Add Trip</h3>
+                
+                <div class="trip-input-grid" style="grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div class="input-group">
+                        <label for="trip_garageTime">🏢 Garage Time</label>
+                        <input type="text" id="trip_garageTime" placeholder="1 Hour Before Pickup" readonly style="background: #f0f9ff; font-weight: 600; color: #0369a1;">
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_spotTime_display">📍 Spot Time</label>
+                        <input type="text" id="trip_spotTime_display" placeholder="15 Min Before Pickup" readonly style="background: #fef3c7; font-weight: 600; color: #92400e;">
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_preTrip">🔧 Pre-Trip</label>
+                        <input type="text" id="trip_preTrip" value="15 Minutes" readonly style="background: #f0fdf4; font-weight: 600; color: #15803d;">
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_postTrip">🔧 Post-Trip</label>
+                        <input type="text" id="trip_postTrip" value="15 Minutes" readonly style="background: #f0fdf4; font-weight: 600; color: #15803d;">
+                    </div>
+                </div>
+                
+                <div class="trip-input-grid">
+                    <div class="input-group">
+                        <label for="trip_startDate">📅 Schedule Start Date <span class="required">*</span></label>
+                        <input type="date" id="trip_startDate" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_endDate">📅 Schedule End Date <span class="required">*</span></label>
+                        <input type="date" id="trip_endDate" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
+                    </div>
+                </div>
+                
+                <h4 style="margin: 25px 0 15px 0; color: #2563EB;">📍 Route Information</h4>
+                <div class="trip-input-grid">
+                    <div class="input-group">
+                        <label for="trip_pickupLocation">Pickup Location <span class="required">*</span></label>
+                        <input type="text" id="trip_pickupLocation" class="location-input" placeholder="Enter pickup address" onchange="calculateTripDistance()">
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_dropoffLocation">Dropoff Location <span class="required">*</span></label>
+                        <input type="text" id="trip_dropoffLocation" class="location-input" placeholder="Enter dropoff address" onchange="calculateTripDistance()">
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_miles">Miles <span class="required">*</span></label>
+                        <input type="number" id="trip_miles" placeholder="Auto-calculated or enter manually" min="1" step="0.1">
+                        <small style="color: #6B7280; font-size: 0.85em;">Auto-fills when addresses are entered</small>
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_avgSpeed">Avg Speed (MPH) <span class="required">*</span></label>
+                        <input type="number" id="trip_avgSpeed" placeholder="Average speed" min="1" max="100" value="60">
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_duration">Trip Duration (Days) <span class="required">*</span></label>
+                        <input type="number" id="trip_duration" placeholder="Number of days" min="1" max="14" step="1" value="1" onchange="calculateReturnTimes()">
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_pickupTime">Pickup Time <span class="required">*</span></label>
+                        <input type="time" id="trip_pickupTime" placeholder="Passenger pickup time" onchange="updateGarageTimeDisplay(); calculateTotalTripHours()">
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_dropoffTime">Drop-Off Time <span class="required">*</span></label>
+                        <input type="time" id="trip_dropoffTime" placeholder="Passenger drop-off time" onchange="calculateReturnTimes(); calculateTotalTripHours()">
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_returnPickupTime">Return Pickup Time</label>
+                        <input type="time" id="trip_returnPickupTime" placeholder="Enter for multi-day trips" onchange="calculateTripDuration(); calculateTotalTripHours()">
+                        <small style="color: #6B7280; font-size: 0.85em;">Fill in for round trips</small>
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_returnDropoffTime">Return Drop-Off Time</label>
+                        <input type="time" id="trip_returnDropoffTime" placeholder="Enter for multi-day trips" onchange="calculateTotalTripHours()">
+                        <small style="color: #6B7280; font-size: 0.85em;">Fill in for round trips</small>
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_totalHours">⏱️ Total Hours</label>
+                        <input type="text" id="trip_totalHours" readonly style="background: #f0f9ff; font-weight: 600; color: #0369a1; font-size: 1.1em;" placeholder="Auto-calculated">
+                        <small style="color: #6B7280; font-size: 0.85em;">Automatically calculated from times</small>
+                    </div>
+                </div>
+                
+                <h4 style="margin: 25px 0 15px 0; color: #7C3AED;">🛑 Multiple Stops (Optional)</h4>
+                <div id="multipleStopsContainer">
+                    <!-- Stops will be added dynamically here -->
+                </div>
+                <button class="secondary-btn" onclick="addTripStop()" style="margin-top: 10px;">
+                    ➕ Add Stop
+                </button>
+                
+                
+                <h3 style="margin-top: 25px; margin-bottom: 15px;">💰 Compensation Details</h3>
+                <div class="trip-input-grid">
+                    <div class="input-group">
+                        <label for="driver_type">Chauffeur Type <span class="required">*</span></label>
+                        <select id="driver_type" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;" onchange="toggleDriverType()">
+                            <option value="full-time">Full-Time Chauffeur</option>
+                            <option value="part-time">Part-Time Chauffeur</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="fullTimeTypeGroup">
+                        <label for="trip_type">Trip Type <span class="required">*</span></label>
+                        <select id="trip_type" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
+                            <option value="contract">Contract/Flat</option>
+                            <option value="retail">Retail with Gratuity</option>
+                        </select>
+                    </div>
+                    <div class="input-group hidden" id="partTimeVehicleGroup">
+                        <label for="vehicle_type">Vehicle Type <span class="required">*</span></label>
+                        <select id="vehicle_type" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
+                            <option value="sedan-suv">Sedan/SUV Retail</option>
+                            <option value="van-motorcoach">Van-Motorcoach Retail</option>
+                            <option value="half-day">Half Day/Contract (≤6 hrs)</option>
+                            <option value="full-day">Full Day/Contract (>6 hrs)</option>
+                            <option value="vehicle-relocation">Vehicle Relocation</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="trip_revenue">Base Pay ($) <span class="required">*</span></label>
+                        <input type="number" id="trip_revenue" placeholder="Base Pay Amount" min="0" step="0.01">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px; padding: 15px; background: #F9FAFB; border-radius: 8px;">
+                    <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="trip_safetyEligible" style="width: auto; margin-right: 8px;">
+                        Safety/Compliance Eligible
+                    </label>
+                    <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="trip_frontEndDeadheadIncluded" style="width: auto; margin-right: 8px;">
+                        🚛 Front-End Deadhead
+                    </label>
+                    <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="trip_backEndDeadheadIncluded" style="width: auto; margin-right: 8px;">
+                        🚛 Back-End Deadhead
+                    </label>
+                    <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="trip_frontEndRelayIncluded" style="width: auto; margin-right: 8px;">
+                        🔄 Front-End Relay
+                    </label>
+                    <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="trip_backEndRelayIncluded" style="width: auto; margin-right: 8px;">
+                        🔄 Back-End Relay
+                    </label>
+                </div>
+                
+                <button class="add-trip-btn" onclick="addTrip()">➕ Add Trip To Schedule</button>
+            </div>
+            
+            <div class="trips-section">
+                <h3>Your Trips</h3>
+                <div id="tripsContainer">
+                    <p class="no-logs">No trips added yet. Add trips to plan your schedule.</p>
+                </div>
+            </div>
+            
+            <div class="multi-trip-results hidden" id="multiTripResults">
+                <h3>📅 Calculated Schedule</h3>
+                <div id="scheduleDisplay"></div>
+            </div>
+        </div>
+
+        <!-- HOS Calculator Section -->
+        <div class="hos-calculator reorderable-section" data-section-id="hos-calculator">
+            <div class="hos-calc-header">
+                <div>
+                    <h1 class="calc-title">🧮 HOS Trip Calculator</h1>
+                    <p class="calc-subtitle">Calculate Hours of Service for single trips</p>
+                </div>
+                <div class="driver-selector">
+                    <label for="hosDriverType">Driver:</label>
+                    <select id="hosDriverType" class="driver-select">
+                        <option value="single">Single Driver</option>
+                        <option value="team">Team Drivers</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Trip Inputs Card -->
+            <div class="calc-card">
+                <h3>📋 Trip Inputs</h3>
+                <div class="trip-input-grid">
+                    <div class="input-group">
+                        <label for="hosStartDate">Start Date <span class="required">*</span></label>
+                        <input type="date" id="hosStartDate" class="hos-input">
+                    </div>
+                    <div class="input-group">
+                        <label for="hosStartTime">Start Time <span class="required">*</span></label>
+                        <input type="time" id="hosStartTime" class="hos-input">
+                    </div>
+                    <div class="input-group">
+                        <label for="hosMiles">Trip Distance (mi) <span class="required">*</span></label>
+                        <input type="number" id="hosMiles" class="hos-input" placeholder="Miles" min="1" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="hosAvgSpeed">Avg Speed (MPH) <span class="required">*</span></label>
+                        <input type="number" id="hosAvgSpeed" class="hos-input" placeholder="Speed" value="60" min="1" max="100">
+                    </div>
+                    <div class="input-group">
+                        <label for="hosPreTrip">Pre-Trip (min)</label>
+                        <input type="number" id="hosPreTrip" class="hos-input" value="15" min="0" step="5">
+                    </div>
+                    <div class="input-group">
+                        <label for="hosPostTrip">Post-Trip (min)</label>
+                        <input type="number" id="hosPostTrip" class="hos-input" value="15" min="0" step="5">
+                    </div>
+                    <div class="input-group">
+                        <label for="hosStops">Passenger Stops (min)</label>
+                        <input type="number" id="hosStops" class="hos-input" value="0" min="0" step="5">
+                    </div>
+                    <div class="input-group">
+                        <label for="hosDumpFuel">Dump/Fuel/Clean (min)</label>
+                        <input type="number" id="hosDumpFuel" class="hos-input" value="0" min="0" step="5">
+                    </div>
+                    <div class="input-group">
+                        <label for="hosWeeklyUsed">Weekly HRS Used</label>
+                        <input type="number" id="hosWeeklyUsed" class="hos-input" value="0" min="0" step="0.5">
+                    </div>
+                    <div class="input-group">
+                        <label for="hosMode">HOS Mode</label>
+                        <select id="hosMode" class="hos-input">
+                            <option value="70_8">70HR/8Day</option>
+                            <option value="70_7">70HR/7Day</option>
+                        </select>
+                    </div>
+
+                </div>
+                <button class="add-trip-btn" onclick="calculateHOSTrip()">🚀 Calculate HOS Requirements</button>
+            </div>
+
+            <!-- HOS Results Card -->
+            <div class="calc-card hidden" id="hosResults">
+                <h3>⏱️ HOS Engine Results</h3>
+                
+                <!-- Status Banner -->
+                <div class="hos-status-banner" id="hosStatusBanner">
+                    <div class="status-banner-icon" id="statusBannerIcon">✅</div>
+                    <div class="status-banner-content">
+                        <div class="status-banner-title" id="statusBannerTitle">LEGAL</div>
+                        <div class="status-banner-subtitle" id="statusBannerSubtitle">Trip complies with all DOT regulations</div>
+                    </div>
+                </div>
+                
+                <!-- Hours Remaining Grid -->
+                <div class="hours-remaining-section">
+                    <h4>📊 Hours Remaining After Trip</h4>
+                    <div class="hours-remaining-grid">
+                        <div class="remaining-card">
+                            <div class="remaining-icon">🚗</div>
+                            <div class="remaining-label">Driving Hours</div>
+                            <div class="remaining-value" id="remainingDriving">-</div>
+                            <div class="remaining-bar">
+                                <div class="remaining-bar-fill driving-bar" id="remainingDrivingBar"></div>
+                            </div>
+                        </div>
+                        <div class="remaining-card">
+                            <div class="remaining-icon">⏰</div>
+                            <div class="remaining-label">On-Duty Hours</div>
+                            <div class="remaining-value" id="remainingDuty">-</div>
+                            <div class="remaining-bar">
+                                <div class="remaining-bar-fill duty-bar" id="remainingDutyBar"></div>
+                            </div>
+                        </div>
+                        <div class="remaining-card">
+                            <div class="remaining-icon">📅</div>
+                            <div class="remaining-label">Weekly Hours</div>
+                            <div class="remaining-value" id="remainingWeekly">-</div>
+                            <div class="remaining-bar">
+                                <div class="remaining-bar-fill weekly-bar" id="remainingWeeklyBar"></div>
+                            </div>
+                        </div>
+                        <div class="remaining-card">
+                            <div class="remaining-icon">🏁</div>
+                            <div class="remaining-label">Arrival Time</div>
+                            <div class="remaining-value" id="resArrivalTime">-</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Violations Section -->
+                <div class="violations-section" id="violationsSection">
+                    <h4>⚠️ Violations Detected</h4>
+                    <div id="violationsList">
+                        <!-- Violations will be listed here -->
+                    </div>
+                </div>
+                
+                <!-- Recommendations Section -->
+                <div class="recommendations-hos-section">
+                    <h4>💡 Recommendations</h4>
+                    <div id="hosRecommendationsEngine">
+                        <!-- Recommendations will be listed here -->
+                    </div>
+                </div>
+                
+                <!-- Calculate Driver Pay Button -->
+                <button class="calculate-pay-btn" onclick="calculateDriverPayFromHOS()">
+                    💰 Calculate Driver Pay for This Trip
+                </button>
+            </div>
+
+            <!-- Trip Timeline Visualization -->
+            <div class="calc-card hidden" id="hosTimeline">
+                <h3>🗓️ Trip Timeline Visualization</h3>
+                
+                <!-- DOT Legality Overlay -->
+                <div class="dot-legality-overlay">
+                    <div class="legality-zones">
+                        <div class="legality-zone zone-legal" id="timeline_legalZone">
+                            <div class="zone-label">✅ Legal Zone</div>
+                            <div class="zone-range" id="timeline_legalRange">0-8 hours</div>
+                        </div>
+                        <div class="legality-zone zone-warning" id="timeline_warningZone">
+                            <div class="zone-label">⚠️ Warning Zone</div>
+                            <div class="zone-range" id="timeline_warningRange">8-10 hours</div>
+                        </div>
+                        <div class="legality-zone zone-danger" id="timeline_dangerZone">
+                            <div class="zone-label">❌ Illegal Zone</div>
+                            <div class="zone-range" id="timeline_dangerRange">>10 hours driving</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Horizontal Segmented Timeline Bar -->
+                <div class="horizontal-timeline-bar" id="horizontalTimelineBar">
+                    <!-- Segments will be generated by JavaScript -->
+                </div>
+                
+                <!-- Detailed Timeline List -->
+                <div class="timeline-container">
+                    <div class="timeline" id="tripTimeline">
+                        <!-- Timeline will be generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations + Pay Summary -->
+            <div class="calc-card hidden" id="hosRecommendations">
+                <div class="recommendation-pay-grid">
+                    <div class="recommendations-section">
+                        <h3>💡 Recommendations</h3>
+                        <div id="hosRecommendationsList">
+                            <!-- Recommendations will be generated -->
+                        </div>
+                    </div>
+                    <div class="pay-summary-section">
+                        <h3>💰 Driver Pay Summary</h3>
+                        <div id="hosPaySummary">
+                            <!-- Pay summary will be generated -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Original Trip Calculator Section -->
+        <div class="trip-calculator" style="display: none;">
+            <h2>📍 Trip Time Calculator (Legacy)</h2>
+
+            
+            <div class="location-input-section">
+                <h3>📍 Enter Locations</h3>
+                <div class="trip-input-grid">
+                    <div class="input-group">
+                        <label for="fromLocation">From (Origin)</label>
+                        <input type="text" id="fromLocation" placeholder="Enter Starting Location">
+                    </div>
+                    <div class="input-group">
+                        <label for="toLocation">To (Destination)</label>
+                        <input type="text" id="toLocation" placeholder="Enter Destination">
+                    </div>
+                </div>
+                <div id="additionalDestinations"></div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="secondary-btn" onclick="addDestination()">➕ Add Additional Destination</button>
+                    <button class="secondary-btn" onclick="getDirections()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                        🧭 Get Directions
+                    </button>
+                </div>
+            </div>
+
+            <div class="map-section">
+                <h3>🗺️ Select Start & Destination on Map</h3>
+                <p class="map-instruction">Click to set <strong style="color: #28a745;">START</strong> location, then click to set <strong style="color: #d63031;">DESTINATION</strong></p>
+                <div id="map"></div>
+                <div class="map-info">
+                    <button class="secondary-btn" onclick="getCurrentLocation()">📍 Use Current Location As Start</button>
+                    <button class="secondary-btn" onclick="clearMapPoints()">🗑️ Clear Points</button>
+                </div>
+            </div>
+
+            <div class="manual-hours-section">
+                <h3>⏱️ Manual Hours Input (Optional)</h3>
+                <p class="hours-instruction">Use these fields to manually enter hours for planning, or leave empty to use tracked hours</p>
+                <div class="manual-hours-grid">
+                    <div class="input-group">
+                        <label for="trip_miles">Miles <span class="required">*</span></label>
+                        <input type="number" id="trip_miles" placeholder="Trip Distance" min="1" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="manualDutyInput">On-Duty Hours Used</label>
+                        <input type="number" id="manualDutyInput" placeholder="Current duty hours" min="0" max="15" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label for="manualBreakInput">Hours Since Break</label>
+                        <input type="number" id="manualBreakInput" placeholder="Hours since last break" min="0" max="12" step="0.1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="calculator-form">
+                <div class="input-group">
+                    <label for="mileageInput">Trip Distance (Miles)</label>
+                    <input type="number" id="mileageInput" placeholder="Enter miles or use map" min="1" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="speedInput">Average Speed (MPH)</label>
+                    <input type="number" id="speedInput" placeholder="Enter speed" min="1" max="100" step="1" value="60">
+                </div>
+                <button class="calculate-btn" onclick="calculateTrip()">
+                    🧮 Calculate Trip
+                </button>
+            </div>
+
+            <div class="trip-results hidden" id="tripResults">
+                <div class="result-header">
+                    <h3>Trip Analysis</h3>
+                </div>
+                <div class="trip-info">
+                    <div class="info-row">
+                        <span class="info-label">Trip Distance:</span>
+                        <span class="info-value" id="resultDistance">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Estimated Travel Time:</span>
+                        <span class="info-value" id="resultTime">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Current Available Drive Hours:</span>
+                        <span class="info-value" id="resultAvailable">-</span>
+                    </div>
+                </div>
+                
+                <div class="recommendation" id="recommendation">
+                    <!-- Recommendation will be inserted here by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Controls -->
+        <div class="status-controls reorderable-section" data-section-id="status-controls">
+            <h2>Change Status</h2>
+            <div class="status-tip">
+                💡 <strong>Tip:</strong> When the vehicle stops, switch to Off Duty to save your 15-hour clock!
+            </div>
+            <div class="button-grid">
+                <button class="status-btn off-duty" onclick="changeStatus('off-duty')">
+                    <span class="btn-icon">🏠</span>
+                    Off Duty
+                </button>
+                <button class="status-btn driving-btn" onclick="changeStatus('driving')">
+                    <span class="btn-icon">🚌</span>
+                    Driving
+                </button>
+                <button class="status-btn on-duty" onclick="changeStatus('on-duty')">
+                    <span class="btn-icon">⚙️</span>
+                    On Duty (Not Driving)
+                </button>
+            </div>
+        </div>
+
+        <!-- Duty Log -->
+        <div class="log-section reorderable-section" data-section-id="duty-log">
+            <h2>Duty Status Log</h2>
+            <div class="log-controls">
+                <button class="secondary-btn" onclick="exportLog()">📥 Export Log</button>
+                <button class="secondary-btn" onclick="clearLog()">🗑️ Clear All</button>
+                <button class="secondary-btn" onclick="resetDay()">🔄 New Day (10HR Reset)</button>
+                <button class="secondary-btn restart-btn" onclick="perform34HourRestart()">🔄 34-Hour Restart</button>
+            </div>
+            <div class="log-container" id="logContainer">
+                <p class="no-logs">No entries yet. Change your status to begin tracking.</p>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div class="settings-section reorderable-section" data-section-id="settings-section">
+            <div class="settings-header">
+                <h1 class="settings-title">⚙️ System Settings</h1>
+                <p class="settings-subtitle">Configure company, drivers, vehicles, pay structures, and compliance</p>
+            </div>
+
+            <!-- Settings Navigation Tabs -->
+            <div class="settings-tabs">
+                <button class="setting-tab active" onclick="showSettingsTab('companyInfo')">
+                    <span class="tab-icon">🏢</span>
+                    <span>Company Info</span>
+                </button>
+                <button class="setting-tab" onclick="showSettingsTab('driversSettings')">
+                    <span class="tab-icon">👥</span>
+                    <span>Drivers</span>
+                </button>
+                <button class="setting-tab" onclick="showSettingsTab('vehiclesSettings')">
+                    <span class="tab-icon">🚐</span>
+                    <span>Vehicles</span>
+                </button>
+                <button class="setting-tab" onclick="showSettingsTab('payStructures')">
+                    <span class="tab-icon">💰</span>
+                    <span>Pay Structures</span>
+                </button>
+                <button class="setting-tab" onclick="showSettingsTab('safetyRules')">
+                    <span class="tab-icon">🛡️</span>
+                    <span>Safety Rules</span>
+                </button>
+                <button class="setting-tab" onclick="showSettingsTab('dotCompliance')">
+                    <span class="tab-icon">📋</span>
+                    <span>DOT Compliance</span>
+                </button>
+            </div>
+
+            <!-- Company Info Tab -->
+            <div class="settings-tab-content" id="companyInfo">
+                <div class="settings-card">
+                    <h3>🏢 Company Information</h3>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label for="set_companyName">Company Name</label>
+                            <input type="text" id="set_companyName" class="hos-input" placeholder="Enter company name" value="ABC Charter & Tours">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_dotNumber">DOT Number</label>
+                            <input type="text" id="set_dotNumber" class="hos-input" placeholder="DOT-XXXXXXX">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_address">Address</label>
+                            <input type="text" id="set_address" class="hos-input" placeholder="Company address">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_phone">Phone</label>
+                            <input type="tel" id="set_phone" class="hos-input" placeholder="(555) 123-4567">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_email">Email</label>
+                            <input type="email" id="set_email" class="hos-input" placeholder="contact@company.com">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_timezone">Timezone</label>
+                            <select id="set_timezone" class="hos-input">
+                                <option value="EST">Eastern (EST/EDT)</option>
+                                <option value="CST">Central (CST/CDT)</option>
+                                <option value="MST">Mountain (MST/MDT)</option>
+                                <option value="PST">Pacific (PST/PDT)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="add-trip-btn" onclick="saveCompanyInfo()">💾 Save Company Info</button>
+                </div>
+            </div>
+
+            <!-- Drivers Settings Tab -->
+            <div class="settings-tab-content hidden" id="driversSettings">
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <h3>👥 Driver Management</h3>
+                        <button class="secondary-btn" onclick="showAddDriverForm()">➕ Add Driver</button>
+                    </div>
+                    
+                    <!-- Drivers List -->
+                    <div class="drivers-list">
+                        <table class="settings-table">
+                            <thead>
+                                <tr>
+                                    <th>Driver Name</th>
+                                    <th>Type</th>
+                                    <th>License</th>
+                                    <th>HOS Mode</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="driversTableBody">
+                                <tr>
+                                    <td><strong>John Doe</strong></td>
+                                    <td>Full-Time</td>
+                                    <td>CDL-A #12345</td>
+                                    <td>70HR/8-Day</td>
+                                    <td><span class="status-badge legal">Active</span></td>
+                                    <td>
+                                        <button class="table-action-btn" onclick="editDriver(1)">✏️ Edit</button>
+                                        <button class="table-action-btn danger" onclick="removeDriver(1)">🗑️</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicles Settings Tab -->
+            <div class="settings-tab-content hidden" id="vehiclesSettings">
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <h3>🚐 Vehicle Settings</h3>
+                        <button class="secondary-btn" onclick="showSection('vehicles-management')">Manage Fleet</button>
+                    </div>
+                    
+                    <h4 style="margin: 20px 0 15px 0; color: #2563EB;">🔧 Maintenance Intervals</h4>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label for="set_inspectionDays">Inspection Interval (days)</label>
+                            <input type="number" id="set_inspectionDays" class="hos-input" value="90" min="1">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_oilChangeMiles">Oil Change Interval (miles)</label>
+                            <input type="number" id="set_oilChangeMiles" class="hos-input" value="5000" min="1000" step="1000">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_tireRotationMiles">Tire Rotation (miles)</label>
+                            <input type="number" id="set_tireRotationMiles" class="hos-input" value="10000" min="5000" step="1000">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_alertDaysBefore">Alert Before Due (days)</label>
+                            <input type="number" id="set_alertDaysBefore" class="hos-input" value="15" min="1">
+                        </div>
+                    </div>
+                    <button class="add-trip-btn" onclick="saveVehicleSettings()">💾 Save Vehicle Settings</button>
+                </div>
+            </div>
+
+            <!-- Pay Structures Tab -->
+            <div class="settings-tab-content hidden" id="payStructures">
+                <div class="settings-card">
+                    <h3>💰 Pay Structure Configuration</h3>
+                    
+                    <!-- Full-Time Pay Settings -->
+                    <h4 style="margin: 20px 0 15px 0; color: #2563EB;">💼 Full Time Chauffeur Pay</h4>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label for="set_weeklyS alary">Weekly Salary ($)</label>
+                            <input type="number" id="set_weeklySalary" class="hos-input" value="400" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_contractBase">Contract Base Rate (%)</label>
+                            <input type="number" id="set_contractBase" class="hos-input" value="12" min="0" max="100" step="0.5">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_retailGratuity">Retail Gratuity Rate (%)</label>
+                            <input type="number" id="set_retailGratuity" class="hos-input" value="20" min="0" max="100" step="0.5">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_safetyBonus">Safety Bonus Rate (%)</label>
+                            <input type="number" id="set_safetyBonus" class="hos-input" value="4" min="0" max="100" step="0.5">
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin: 30px 0 15px 0; color: #059669;">🚛 Full-Time Deadhead Rates</h4>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label for="set_ft_deadhead4h_base">Deadhead <4h - Base Rate ($)</label>
+                            <input type="number" id="set_ft_deadhead4h_base" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_ft_deadhead4h_safety">Deadhead <4h - Safety Bonus ($)</label>
+                            <input type="number" id="set_ft_deadhead4h_safety" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_ft_deadhead8h_base">Deadhead <8h - Base Rate ($)</label>
+                            <input type="number" id="set_ft_deadhead8h_base" class="hos-input" value="150" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_ft_deadhead8h_safety">Deadhead <8h - Safety Bonus ($)</label>
+                            <input type="number" id="set_ft_deadhead8h_safety" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_ft_deadhead9h_base">Deadhead >9h - Base Rate ($)</label>
+                            <input type="number" id="set_ft_deadhead9h_base" class="hos-input" value="250" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_ft_deadhead9h_safety">Deadhead >9h - Safety Bonus ($)</label>
+                            <input type="number" id="set_ft_deadhead9h_safety" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin: 30px 0 15px 0; color: #7C3AED;">🔄 Full-Time Relay Rates</h4>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label for="set_ft_relay6h_base">Relay <6h - Base Rate ($)</label>
+                            <input type="number" id="set_ft_relay6h_base" class="hos-input" value="150" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_ft_relay6h_safety">Relay <6h - Safety Bonus ($)</label>
+                            <input type="number" id="set_ft_relay6h_safety" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_ft_relay6hPlus_base">Relay >6h - Base Rate ($)</label>
+                            <input type="number" id="set_ft_relay6hPlus_base" class="hos-input" value="275" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_ft_relay6hPlus_safety">Relay >6h - Safety Bonus ($)</label>
+                            <input type="number" id="set_ft_relay6hPlus_safety" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                    </div>
+                    
+                    <!-- Part-Time Pay Settings -->
+                    <h4 style="margin: 30px 0 15px 0; color: #F59E0B;">⏰ Part-Time Driver Pay</h4>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label for="set_sedanBase">Sedan/SUV Base Rate (%)</label>
+                            <input type="number" id="set_sedanBase" class="hos-input" value="10" min="0" max="100" step="0.5">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_vanBase">Van/Motorcoach Base Rate (%)</label>
+                            <input type="number" id="set_vanBase" class="hos-input" value="8" min="0" max="100" step="0.5">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_halfDayFlat">Half Day Flat Rate ($)</label>
+                            <input type="number" id="set_halfDayFlat" class="hos-input" value="150" min="0" step="5">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_fullDayFlat">Full Day Flat Rate ($)</label>
+                            <input type="number" id="set_fullDayFlat" class="hos-input" value="275" min="0" step="5">
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin: 30px 0 15px 0; color: #059669;">🚛 Part-Time Deadhead Rates</h4>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label for="set_pt_deadhead4h_base">Deadhead <4h - Base Rate ($)</label>
+                            <input type="number" id="set_pt_deadhead4h_base" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_pt_deadhead4h_safety">Deadhead <4h - Safety Bonus ($)</label>
+                            <input type="number" id="set_pt_deadhead4h_safety" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_pt_deadhead8h_base">Deadhead <8h - Base Rate ($)</label>
+                            <input type="number" id="set_pt_deadhead8h_base" class="hos-input" value="150" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_pt_deadhead8h_safety">Deadhead <8h - Safety Bonus ($)</label>
+                            <input type="number" id="set_pt_deadhead8h_safety" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_pt_deadhead9h_base">Deadhead >9h - Base Rate ($)</label>
+                            <input type="number" id="set_pt_deadhead9h_base" class="hos-input" value="250" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_pt_deadhead9h_safety">Deadhead >9h - Safety Bonus ($)</label>
+                            <input type="number" id="set_pt_deadhead9h_safety" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin: 30px 0 15px 0; color: #7C3AED;">🔄 Part-Time Relay Rates</h4>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label for="set_pt_relay6h_base">Relay <6h - Base Rate ($)</label>
+                            <input type="number" id="set_pt_relay6h_base" class="hos-input" value="150" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_pt_relay6h_safety">Relay <6h - Safety Bonus ($)</label>
+                            <input type="number" id="set_pt_relay6h_safety" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_pt_relay6hPlus_base">Relay >6h - Base Rate ($)</label>
+                            <input type="number" id="set_pt_relay6hPlus_base" class="hos-input" value="275" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_pt_relay6hPlus_safety">Relay >6h - Safety Bonus ($)</label>
+                            <input type="number" id="set_pt_relay6hPlus_safety" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin: 30px 0 15px 0; color: #EC4899;">🚗 Part-Time Vehicle Relocation</h4>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label for="set_pt_vehicleRelocation_base">Vehicle Relocation - Base Rate ($)</label>
+                            <input type="number" id="set_pt_vehicleRelocation_base" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_pt_vehicleRelocation_safety">Vehicle Relocation - Safety Bonus ($)</label>
+                            <input type="number" id="set_pt_vehicleRelocation_safety" class="hos-input" value="50" min="0" step="10">
+                        </div>
+                    </div>
+                    
+                    <button class="add-trip-btn" onclick="savePayStructures()">💾 Save Pay Structures</button>
+                </div>
+            </div>
+
+            <!-- Safety Rules Tab -->
+            <div class="settings-tab-content hidden" id="safetyRules">
+                <div class="settings-card">
+                    <h3>🛡️ Safety & Compliance Rules</h3>
+                    
+                    <h4 style="margin: 20px 0 15px 0; color: #EF4444;">⚠️ Violation Thresholds</h4>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label for="set_speedingThreshold">Speeding Threshold (MPH over limit)</label>
+                            <input type="number" id="set_speedingThreshold" class="hos-input" value="10" min="1" max="20">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_hardBrakingThreshold">Hard Braking Force (G)</label>
+                            <input type="number" id="set_hardBrakingThreshold" class="hos-input" value="0.5" min="0.1" max="1.0" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_rapidAccelThreshold">Rapid Acceleration (G)</label>
+                            <input type="number" id="set_rapidAccelThreshold" class="hos-input" value="0.4" min="0.1" max="1.0" step="0.1">
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin: 30px 0 15px 0; color: #10B981;">✅ Safety Bonus Requirements</h4>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" id="set_noViolations" checked style="width: 20px; height: 20px;">
+                                <span style="font-weight: 600;">No safety violations</span>
+                            </label>
+                        </div>
+                        <div class="input-group">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" id="set_noHOSViolations" checked style="width: 20px; height: 20px;">
+                                <span style="font-weight: 600;">No HOS violations</span>
+                            </label>
+                        </div>
+                        <div class="input-group">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" id="set_onTimeArrival" checked style="width: 20px; height: 20px;">
+                                <span style="font-weight: 600;">On-time arrival</span>
+                            </label>
+                        </div>
+                        <div class="input-group">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" id="set_vehicleInspection" checked style="width: 20px; height: 20px;">
+                                <span style="font-weight: 600;">Vehicle inspection completed</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button class="add-trip-btn" onclick="saveSafetyRules()">💾 Save Safety Rules</button>
+                </div>
+            </div>
+
+            <!-- DOT Compliance Tab -->
+            <div class="settings-tab-content hidden" id="dotCompliance">
+                <div class="settings-card">
+                    <h3>📋 DOT HOS Compliance Configuration</h3>
+                    
+                    <h4 style="margin: 20px 0 15px 0; color: #2563EB;">⏱️ Hours of Service Limits</h4>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label for="set_hosMode">HOS Mode <span class="required">*</span></label>
+                            <select id="set_hosMode" class="hos-input">
+                                <option value="70_8">70 hrs / 8 Days</option>
+                                <option value="60_7">60 hrs / 7 Days</option>
+                            </select>
+                            <small style="color: #6B7280; font-size: 0.85em;">Select your operation cycle</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="set_cycleHours">Cycle Hours Limit</label>
+                            <input type="number" id="set_cycleHours" class="hos-input" value="70" min="60" max="70" step="10">
+                            <small style="color: #6B7280; font-size: 0.85em;">70 hrs (8-day) or 60 hrs (7-day)</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="set_maxDriving">Max Driving Hours (daily)</label>
+                            <input type="number" id="set_maxDriving" class="hos-input" value="10" min="1" max="11" readonly style="background: #F3F4F6;">
+                            <small style="color: #6B7280; font-size: 0.85em;">DOT regulation (cannot be changed)</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="set_maxOnDuty">Max On-Duty Hours (daily)</label>
+                            <input type="number" id="set_maxOnDuty" class="hos-input" value="15" min="1" max="16" readonly style="background: #F3F4F6;">
+                            <small style="color: #6B7280; font-size: 0.85em;">DOT regulation (cannot be changed)</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="set_breakRequired">Break Required After (hours)</label>
+                            <input type="number" id="set_breakRequired" class="hos-input" value="8" min="1" max="8" readonly style="background: #F3F4F6;">
+                            <small style="color: #6B7280; font-size: 0.85em;">DOT regulation (cannot be changed)</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="set_breakDuration">Min Break Duration (minutes)</label>
+                            <input type="number" id="set_breakDuration" class="hos-input" value="30" min="30" readonly style="background: #F3F4F6;">
+                            <small style="color: #6B7280; font-size: 0.85em;">DOT regulation (cannot be changed)</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="set_restartHours">34-Hour Restart Period</label>
+                            <input type="number" id="set_restartHours" class="hos-input" value="34" min="34" readonly style="background: #F3F4F6;">
+                            <small style="color: #6B7280; font-size: 0.85em;">DOT regulation (cannot be changed)</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="set_dailyResetHours">Daily Reset Period (hours)</label>
+                            <input type="number" id="set_dailyResetHours" class="hos-input" value="10" min="10" readonly style="background: #F3F4F6;">
+                            <small style="color: #6B7280; font-size: 0.85em;">DOT regulation (cannot be changed)</small>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin: 30px 0 15px 0; color: #10B981;">✅ Configurable Settings</h4>
+                    <div class="settings-grid">
+                        <div class="input-group">
+                            <label for="set_preTripDefault">Default Pre-Trip Time (min)</label>
+                            <input type="number" id="set_preTripDefault" class="hos-input" value="15" min="5" max="60" step="5">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_postTripDefault">Default Post-Trip Time (min)</label>
+                            <input type="number" id="set_postTripDefault" class="hos-input" value="15" min="5" max="60" step="5">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_spotBufferDefault">Spot Time (min)</label>
+                            <input type="number" id="set_spotBufferDefault" class="hos-input" value="15" min="10" max="30" step="5">
+                        </div>
+                        <div class="input-group">
+                            <label for="set_garageBufferDefault">Garage Time (HR)</label>
+                            <input type="number" id="set_garageBufferDefault" class="hos-input" value="1" min="0.5" max="3" step="0.5">
+                        </div>
+                        <div class="input-group">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" id="set_autoViolationAlerts" checked style="width: 20px; height: 20px;">
+                                <span style="font-weight: 600;">Auto Violation Alerts</span>
+                            </label>
+                        </div>
+                        <div class="input-group">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" id="set_strictCompliance" checked style="width: 20px; height: 20px;">
+                                <span style="font-weight: 600;">Strict DOT Compliance Mode</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-info-box">
+                        <strong>ℹ️ Important:</strong> DOT HOS limits (10hr driving, 15hr on-duty, 8hr break, 30min break duration, 34hr restart, 10hr reset) are federal regulations and cannot be modified. Only configurable company-specific settings can be changed.
+                    </div>
+                    
+                    <button class="add-trip-btn" onclick="saveDOTCompliance()">💾 Save DOT Settings</button>
+                </div>
+            </div>
+        </div>
+
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

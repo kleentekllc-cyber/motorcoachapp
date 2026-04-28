@@ -1,0 +1,16 @@
+node_modules
+dist
+.env
+.env.local
+.env.production
+.env.development
+backend/.env
+frontend/.env.local
+.prisma
+.next
+.DS_Store
+*.log
+.vercel
+.terraform
+*.tfstate
+*.tfstate.backup

@@ -1,0 +1,307 @@
+{
+  "info": {
+    "name": "Bus DOT Hours Tracker API",
+    "_postman_id": "bus-dot-api-collection",
+    "description": "Complete API collection for Bus DOT Hours Tracker",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Drivers",
+      "item": [
+        {
+          "name": "Get All Drivers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/drivers",
+              "host": ["{{baseUrl}}"],
+              "path": ["drivers"]
+            }
+          }
+        },
+        {
+          "name": "Get Driver",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/drivers/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["drivers", ":id"],
+              "variable": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Create Driver",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"555-0100\",\n  \"status\": \"off_duty\",\n  \"employment_type\": \"full_time\",\n  \"license_number\": \"CDL-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/drivers",
+              "host": ["{{baseUrl}}"],
+              "path": ["drivers"]
+            }
+          }
+        },
+        {
+          "name": "Update Driver",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"driving\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/drivers/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["drivers", ":id"],
+              "variable": [{ "key": "id", "value": "1" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vehicles",
+      "item": [
+        {
+          "name": "Get All Vehicles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehicles",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles"]
+            }
+          }
+        },
+        {
+          "name": "Get Vehicle",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vehicles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles", ":id"],
+              "variable": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Create Vehicle",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bus #001\",\n  \"type\": \"motorcoach\",\n  \"capacity\": 55,\n  \"plate_number\": \"BUS-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehicles",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles"]
+            }
+          }
+        },
+        {
+          "name": "Update Vehicle",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vehicles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles", ":id"],
+              "variable": [{ "key": "id", "value": "1" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trips",
+      "item": [
+        {
+          "name": "Get All Trips",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trips",
+              "host": ["{{baseUrl}}"],
+              "path": ["trips"]
+            }
+          }
+        },
+        {
+          "name": "Get Trip",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/trips/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["trips", ":id"],
+              "variable": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Create Trip",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passenger_name\": \"ABC Company\",\n  \"group_size\": 48,\n  \"pickup_location\": \"New York, NY\",\n  \"dropoff_location\": \"Boston, MA\",\n  \"pickup_time\": \"2026-04-05T08:00:00Z\",\n  \"estimated_mileage\": 215,\n  \"average_speed\": 55,\n  \"pre_trip_minutes\": 15,\n  \"post_trip_minutes\": 15,\n  \"dump_fuel_clean_minutes\": 30,\n  \"deadhead_miles\": 0,\n  \"relay_required\": false,\n  \"hotel_reset_required\": false,\n  \"status\": \"scheduled\",\n  \"driver_id\": 1,\n  \"vehicle_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trips",
+              "host": ["{{baseUrl}}"],
+              "path": ["trips"]
+            }
+          }
+        },
+        {
+          "name": "Update Trip",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trips/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["trips", ":id"],
+              "variable": [{ "key": "id", "value": "1" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "HOS Engine",
+      "item": [
+        {
+          "name": "Calculate HOS",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"driver_id\": 1,\n  \"trip_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/hos/calculate",
+              "host": ["{{baseUrl}}"],
+              "path": ["hos", "calculate"]
+            },
+            "description": "Calculate DOT Hours of Service compliance for a trip"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Timeline Engine",
+      "item": [
+        {
+          "name": "Generate Timeline",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trip_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/timeline/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["timeline", "generate"]
+            },
+            "description": "Generate timeline for a trip with all segments"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pay Engine",
+      "item": [
+        {
+          "name": "Calculate Pay",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"driver_id\": 1,\n  \"trip_id\": 1,\n  \"revenue\": 1800,\n  \"trip_type\": \"retail\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pay/calculate",
+              "host": ["{{baseUrl}}"],
+              "path": ["pay", "calculate"]
+            },
+            "description": "Calculate driver pay with bonuses and breakdowns"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DOT Settings",
+      "item": [
+        {
+          "name": "Get DOT Settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/settings/dot",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings", "dot"]
+            },
+            "description": "Get current DOT regulation settings"
+          }
+        },
+        {
+          "name": "Update DOT Settings",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_name\": \"Your Company\",\n  \"hos_11_hour_limit_minutes\": 660,\n  \"hos_14_hour_limit_minutes\": 840,\n  \"hos_60_70_hour_limit_minutes\": 4200\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/settings/dot",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings", "dot"]
+            },
+            "description": "Update DOT regulation settings"
+          }
+        }
+      ]
+    }
+  ]
+}

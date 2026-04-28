@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("SUPABASE_DB_URL")
+}
+
+model Trip {
+  id        Int      @id @default(autoincrement())
+  name      String
+  startTime DateTime
+  endTime   DateTime
+  driverId  Int?
+  vehicleId Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Driver {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?  @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Vehicle {
+  id        Int      @id @default(autoincrement())
+  name      String
+  plate     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
