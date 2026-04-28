@@ -4261,4 +4261,122 @@ function loadSectionOrder() {
 // Load saved section order on page load
 window.addEventListener('DOMContentLoaded', () => {
     loadSectionOrder();
+    initNavigation();
+    initSearch();
 });
+
+// ============================================
+// NAVIGATION & TAB SWITCHING
+// ============================================
+
+function initNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
+    const sections = document.querySelectorAll('[id]');
+    
+    // Handle nav item clicks
+    navItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            
+            // Update active state
+            navItems.forEach(nav => nav.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Scroll to section smoothly
+            const targetSection = document.getElementById(targetId);
+            if (targetSection) {
+                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+    
+    // Update active state on scroll
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (scrollY >= sectionTop - 200) {
+                current = section.getAttribute('id');
+            }
+        });
+        
+        navItems.forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('href') === `#${current}`) {
+                item.classList.add('active');
+            }
+        });
+    });
+}
+
+// ============================================
+// SEARCH FUNCTIONALITY
+// ============================================
+
+function initSearch() {
+    const searchInput = document.getElementById('globalSearch');
+    const searchClear = document.getElementById('searchClear');
+    
+    if (!searchInput) return;
+    
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        
+        // Show/hide clear button
+        if (searchClear) {
+            searchClear.style.display = query ? 'block' : 'none';
+        }
+        
+        if (query.length < 2) {
+            clearSearchHighlights();
+            return;
+        }
+        
+        performSearch(query);
+    });
+    
+    if (searchClear) {
+        searchClear.addEventListener('click', function() {
+            searchInput.value = '';
+            this.style.display = 'none';
+            clearSearchHighlights();
+            searchInput.focus();
+        });
+    }
+}
+
+function performSearch(query) {
+    clearSearchHighlights();
+    
+    const sections = document.querySelectorAll('.card, .section');
+    let foundCount = 0;
+    
+    sections.forEach(section => {
+        const text = section.textContent.toLowerCase();
+        if (text.includes(query)) {
+            section.classList.add('search-highlight');
+            section.style.display = 'block';
+            foundCount++;
+        } else {
+            section.style.opacity = '0.4';
+        }
+    });
+    
+    console.log(`Found ${foundCount} results for "${query}"`);
+}
+
+function clearSearchHighlights() {
+    const highlighted = document.querySelectorAll('.search-highlight');
+    highlighted.forEach(el => {
+        el.classList.remove('search-highlight');
+        el.style.opacity = '1';
+    });
+    
+    const sections = document.querySelectorAll('.card, .section');
+    sections.forEach(section => {
+        section.style.display = '';
+        section.style.opacity = '1';
+    });
+}
