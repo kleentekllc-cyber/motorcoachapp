@@ -2,7 +2,7 @@
 // BUS DOT HOURS TRACKER - API CLIENT
 // ===================================
 
-const API_BASE = "http://localhost:3000/api";
+const API_BASE = "https://fleet-backend-9ndj.onrender.com/api";
 
 // --------------------------
 // GENERIC API METHODS
