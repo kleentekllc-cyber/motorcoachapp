@@ -4263,18 +4263,9 @@ window.addEventListener('DOMContentLoaded', () => {
     loadSectionOrder();
     initNavigation();
     initSearch();
-    initTripCalculatorAutocomplete();
-    initUserGeolocation();
 });
 
-// Initialize dashboard fleet map
-window.addEventListener('load', () => {
-    const dashMap = L.map('dashboard-map').setView([33.0, -81.0], 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
-    }).addTo(dashMap);
-});
+// Google Maps initialised via script callback — see onGoogleMapsLoaded() below
 
 // Header tab click handler — shows one page, hides all others
 function setActiveTab(el, pageId) {
@@ -4433,132 +4424,20 @@ function clearSearchHighlights() {
 // ============================================
 
 let tcStopCount = 0;
-let milesDebounceTimer = null;
 
-// ---- Address Autocomplete ----
-
-let userGeoLat = null;
-let userGeoLng = null;
-
-function initUserGeolocation() {
-    // Load cached position immediately so it's ready before the user types
-    try {
-        const cached = localStorage.getItem('tcGeoPos');
-        if (cached) {
-            const p = JSON.parse(cached);
-            userGeoLat = p.lat;
-            userGeoLng = p.lng;
-        }
-    } catch (e) {}
-
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(pos => {
-        userGeoLat = pos.coords.latitude;
-        userGeoLng = pos.coords.longitude;
-        try { localStorage.setItem('tcGeoPos', JSON.stringify({ lat: userGeoLat, lng: userGeoLng })); } catch (e) {}
-    }, () => {});
-}
-
-const acTimers = {};
+// ---- Google Places Autocomplete ----
 
 function initAddressAutocomplete(input) {
-    const wrapper = input.parentElement;
-    wrapper.style.position = 'relative';
-
-    const dropdown = document.createElement('ul');
-    dropdown.className = 'ac-dropdown';
-    wrapper.appendChild(dropdown);
-
-    let activeIdx = -1;
-
-    input.addEventListener('input', () => {
-        const q = input.value.trim();
-        activeIdx = -1;
-        if (q.length < 3) { closeAC(dropdown); return; }
-        clearTimeout(acTimers[input.id]);
-        acTimers[input.id] = setTimeout(() => fetchACSuggestions(input, dropdown, q, () => { activeIdx = -1; }), 300);
+    const ac = new google.maps.places.Autocomplete(input, {
+        componentRestrictions: { country: 'us' },
+        fields: ['formatted_address'],
+        types: ['address']
     });
-
-    input.addEventListener('keydown', (e) => {
-        const items = dropdown.querySelectorAll('li');
-        if (!items.length) return;
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            activeIdx = Math.min(activeIdx + 1, items.length - 1);
-            highlightAC(items, activeIdx);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            activeIdx = Math.max(activeIdx - 1, 0);
-            highlightAC(items, activeIdx);
-        } else if (e.key === 'Enter' && activeIdx >= 0) {
-            e.preventDefault();
-            items[activeIdx].click();
-        } else if (e.key === 'Escape') {
-            closeAC(dropdown);
-        }
+    ac.addListener('place_changed', () => {
+        const place = ac.getPlace();
+        if (place.formatted_address) input.value = place.formatted_address;
+        calcTotalMiles();
     });
-
-    document.addEventListener('click', (e) => {
-        if (!wrapper.contains(e.target)) closeAC(dropdown);
-    }, { capture: true });
-}
-
-function highlightAC(items, idx) {
-    items.forEach((li, i) => li.classList.toggle('ac-active', i === idx));
-    if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
-}
-
-function closeAC(dropdown) {
-    dropdown.innerHTML = '';
-    dropdown.style.display = 'none';
-}
-
-async function fetchACSuggestions(input, dropdown, query, onReset) {
-    try {
-        const base = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=0&countrycodes=us&q=${encodeURIComponent(query)}`;
-        let results = [];
-
-        // Step 1: search strictly within ~200-mile radius of user
-        if (userGeoLat !== null && userGeoLng !== null) {
-            const d = 3;
-            const vb = `${userGeoLng - d},${userGeoLat + d},${userGeoLng + d},${userGeoLat - d}`;
-            const localRes = await fetch(`${base}&limit=5&bounded=1&viewbox=${vb}`, { headers: { 'Accept-Language': 'en' } });
-            results = await localRes.json();
-        }
-
-        // Step 2: fill remaining slots with national results (no bounding)
-        const remaining = 6 - results.length;
-        if (remaining > 0) {
-            const natRes = await fetch(`${base}&limit=${remaining + 2}`, { headers: { 'Accept-Language': 'en' } });
-            const natData = await natRes.json();
-            const seen = new Set(results.map(r => r.place_id));
-            for (const r of natData) {
-                if (!seen.has(r.place_id) && results.length < 6) {
-                    results.push(r);
-                    seen.add(r.place_id);
-                }
-            }
-        }
-
-        onReset();
-        dropdown.innerHTML = '';
-        if (!results.length) { closeAC(dropdown); return; }
-        results.forEach(r => {
-            const li = document.createElement('li');
-            li.textContent = r.display_name;
-            li.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                input.value = r.display_name;
-                closeAC(dropdown);
-                input.dispatchEvent(new Event('change', { bubbles: true }));
-                debounceCalcMiles();
-            });
-            dropdown.appendChild(li);
-        });
-        dropdown.style.display = 'block';
-    } catch (e) {
-        closeAC(dropdown);
-    }
 }
 
 function initTripCalculatorAutocomplete() {
@@ -4618,48 +4497,21 @@ function addTripStop() {
     div.className = 'panel-stop-row';
     div.id = `tcStop${tcStopCount}`;
     div.innerHTML = `
-        <div style="flex:1;position:relative;">
-            <input type="text" class="panel-input tc-stop-loc" placeholder="Stop ${tcStopCount} address..." oninput="debounceCalcMiles()">
-        </div>
+        <input type="text" class="panel-input tc-stop-loc" placeholder="Stop ${tcStopCount} address...">
         <button class="panel-stop-remove" onclick="removeTripStop('tcStop${tcStopCount}')" title="Remove">✕</button>
     `;
     container.appendChild(div);
-    const stopInput = div.querySelector('.tc-stop-loc');
-    initAddressAutocomplete(stopInput);
+    initAddressAutocomplete(div.querySelector('.tc-stop-loc'));
 }
 
 function removeTripStop(id) {
     const el = document.getElementById(id);
-    if (el) {
-        el.remove();
-        debounceCalcMiles();
-    }
+    if (el) { el.remove(); calcTotalMiles(); }
 }
 
-function debounceCalcMiles() {
-    clearTimeout(milesDebounceTimer);
-    document.getElementById('tcMilesStatus').textContent = 'Typing...';
-    document.getElementById('tcTotalMiles').textContent = '—';
-    milesDebounceTimer = setTimeout(calcTotalMiles, 1400);
-}
-
-async function geocode(address) {
-    if (!address || address.trim().length < 5) return null;
-    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=${encodeURIComponent(address.trim())}`;
-    try {
-        const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-        const data = await res.json();
-        if (data && data.length > 0) {
-            return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-        }
-    } catch (e) { /* network error */ }
-    return null;
-}
-
-async function calcTotalMiles() {
+function calcTotalMiles() {
     const pickup = document.getElementById('tcPickupLoc')?.value.trim();
     const dropoff = document.getElementById('tcDropoffLoc')?.value.trim();
-    const stopInputs = document.querySelectorAll('.tc-stop-loc');
     const milesEl = document.getElementById('tcTotalMiles');
     const statusEl = document.getElementById('tcMilesStatus');
 
@@ -4669,36 +4521,50 @@ async function calcTotalMiles() {
         return;
     }
 
-    statusEl.textContent = 'Geocoding...';
+    const stopInputs = Array.from(document.querySelectorAll('.tc-stop-loc'))
+        .map(i => i.value.trim()).filter(Boolean);
 
-    const addresses = [pickup, ...Array.from(stopInputs).map(i => i.value.trim()), dropoff];
-    const coords = [];
-    for (const addr of addresses) {
-        coords.push(addr ? await geocode(addr) : null);
-    }
+    const waypoints = stopInputs.map(addr => ({ location: addr, stopover: true }));
 
-    const validCoords = coords.filter(Boolean);
-    if (validCoords.length < 2) {
-        milesEl.textContent = '—';
-        statusEl.textContent = 'Could not locate one or more addresses';
-        return;
-    }
+    statusEl.textContent = 'Calculating route...';
 
-    statusEl.textContent = 'Getting route...';
-    try {
-        const coordStr = validCoords.map(c => `${c.lng},${c.lat}`).join(';');
-        const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=false`);
-        const data = await res.json();
-        if (data.code === 'Ok' && data.routes?.length > 0) {
-            const miles = (data.routes[0].distance / 1609.344).toFixed(1);
+    const svc = new google.maps.DirectionsService();
+    svc.route({
+        origin: pickup,
+        destination: dropoff,
+        waypoints,
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.IMPERIAL
+    }, (result, status) => {
+        if (status === 'OK') {
+            let totalMeters = 0;
+            result.routes[0].legs.forEach(leg => { totalMeters += leg.distance.value; });
+            const miles = (totalMeters / 1609.344).toFixed(1);
             milesEl.textContent = `${miles} mi`;
-            statusEl.textContent = validCoords.length > 2 ? `${validCoords.length - 2} stop(s) included` : '';
+            statusEl.textContent = waypoints.length ? `${waypoints.length} stop(s) included` : '';
         } else {
             milesEl.textContent = '—';
             statusEl.textContent = 'Route not found';
         }
-    } catch (e) {
-        milesEl.textContent = '—';
-        statusEl.textContent = 'Distance lookup failed';
+    });
+}
+
+// ============================================
+// GOOGLE MAPS INIT (callback from API script)
+// ============================================
+
+function onGoogleMapsLoaded() {
+    // Fleet map
+    const mapEl = document.getElementById('dashboard-map');
+    if (mapEl) {
+        new google.maps.Map(mapEl, {
+            center: { lat: 33.0, lng: -81.0 },
+            zoom: 7,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false
+        });
     }
+    // Address autocomplete on trip calculator fields
+    initTripCalculatorAutocomplete();
 }

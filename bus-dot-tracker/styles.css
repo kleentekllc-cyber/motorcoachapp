@@ -3530,46 +3530,40 @@ h2 {
     background: rgba(37, 99, 235, 0.08);
 }
 
-/* Address autocomplete dropdown */
-.ac-dropdown {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: #1F2937;
-    border: 1px solid #374151;
-    border-top: none;
-    border-radius: 0 0 5px 5px;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    z-index: 999;
-    max-height: 200px;
-    overflow-y: auto;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+/* Google Places Autocomplete dropdown — dark theme */
+.pac-container {
+    background: #1F2937 !important;
+    border: 1px solid #374151 !important;
+    border-radius: 0 0 6px 6px !important;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5) !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    margin-top: -1px;
 }
 
-.ac-dropdown li {
-    padding: 8px 10px;
-    font-size: 0.75em;
-    color: #D1D5DB;
-    cursor: pointer;
-    border-bottom: 1px solid #2D3748;
-    line-height: 1.4;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.pac-item {
+    background: #1F2937 !important;
+    color: #D1D5DB !important;
+    border-top: 1px solid #2D3748 !important;
+    padding: 7px 10px !important;
+    font-size: 0.78em !important;
+    cursor: pointer !important;
+    line-height: 1.4 !important;
 }
 
-.ac-dropdown li:last-child {
-    border-bottom: none;
+.pac-item:hover,
+.pac-item-selected {
+    background: #2563EB !important;
+    color: #fff !important;
 }
 
-.ac-dropdown li:hover,
-.ac-dropdown li.ac-active {
-    background: #2563EB;
-    color: #fff;
+.pac-item-query {
+    color: #F9FAFB !important;
+    font-size: 0.85em !important;
+}
+
+.pac-icon,
+.pac-logo {
+    display: none !important;
 }
 
 /* Miles status message */
