@@ -281,7 +281,7 @@
         </div>
 
         <!-- Trips Management Section -->
-        <div class="trips-management reorderable-section" data-section-id="trips-management">
+        <div id="trips-management" class="trips-management reorderable-section" data-section-id="trips-management">
             <div class="trips-header">
                 <h1 class="trips-title">🚌 Trips Management</h1>
                 <button class="add-trip-btn" onclick="showCreateTripForm()">➕ Create New Trip</button>
@@ -477,7 +477,7 @@
         </div>
 
         <!-- Vehicles Management Section -->
-        <div class="vehicles-management reorderable-section" data-section-id="vehicles-management">
+        <div id="vehicles-management" class="vehicles-management reorderable-section" data-section-id="vehicles-management">
             <div class="vehicles-header">
                 <h1 class="vehicles-title">🚐 Vehicles Management</h1>
                 <button class="add-trip-btn" onclick="showCreateVehicleForm()">➕ Add New Vehicle</button>
@@ -672,7 +672,7 @@
         </div>
 
         <!-- Hidden Sections (accessible via sidebar) -->
-        <div id="current-status" class="hidden-section" style="display: none;">
+        <div id="current-status">
         <!-- Current Status Section -->
         <div class="current-status">
             <h2>Current Status</h2>
@@ -696,7 +696,7 @@
 
 
         <!-- Hours Summary Cards -->
-        <div class="hours-summary reorderable-section" data-section-id="hours-summary">
+        <div id="hours-summary" class="hours-summary reorderable-section" data-section-id="hours-summary">
             <h2>Hours Summary</h2>
             <div class="hours-grid">
                 <div class="hours-card driving">
@@ -776,7 +776,7 @@
         </div>
 
         <!-- Driver Pay Calculator Section -->
-        <div class="pay-calculator-new reorderable-section" data-section-id="pay-calculator">
+        <div id="pay-calculator" class="pay-calculator-new reorderable-section" data-section-id="pay-calculator">
             <div class="pay-calc-header">
                 <h1 class="calc-title">💰 Driver Pay Calculator</h1>
                 <p class="calc-subtitle">Comprehensive earnings calculator with smart insights</p>
@@ -1399,7 +1399,7 @@
 
 
         <!-- Multi-Trip Planner Section -->
-        <div class="multi-trip-planner reorderable-section" data-section-id="multi-trip-planner">
+        <div id="multi-trip" class="multi-trip-planner reorderable-section" data-section-id="multi-trip-planner">
             <h2>🗓️ Multi-Trip Planner (Up to 2 Weeks)</h2>
             <p class="planner-description">Plan multiple trips and see when you'll need rest periods and 34-hour restarts</p>
             
@@ -1757,7 +1757,7 @@
         </div>
 
         <!-- Original Trip Calculator Section -->
-        <div class="trip-calculator" style="display: none;">
+        <div id="trip-calc" class="trip-calculator">
             <h2>📍 Trip Time Calculator (Legacy)</h2>
 
             
@@ -1851,7 +1851,7 @@
         </div>
 
         <!-- Status Controls -->
-        <div class="status-controls reorderable-section" data-section-id="status-controls">
+        <div id="status-controls" class="status-controls reorderable-section" data-section-id="status-controls">
             <h2>Change Status</h2>
             <div class="status-tip">
                 💡 <strong>Tip:</strong> When the vehicle stops, switch to Off Duty to save your 15-hour clock!
@@ -1873,7 +1873,7 @@
         </div>
 
         <!-- Duty Log -->
-        <div class="log-section reorderable-section" data-section-id="duty-log">
+        <div id="duty-log" class="log-section reorderable-section" data-section-id="duty-log">
             <h2>Duty Status Log</h2>
             <div class="log-controls">
                 <button class="secondary-btn" onclick="exportLog()">📥 Export Log</button>
@@ -1887,7 +1887,7 @@
         </div>
 
         <!-- Settings Section -->
-        <div class="settings-section reorderable-section" data-section-id="settings-section">
+        <div id="settings" class="settings-section reorderable-section" data-section-id="settings-section">
             <div class="settings-header">
                 <h1 class="settings-title">⚙️ System Settings</h1>
                 <p class="settings-subtitle">Configure company, drivers, vehicles, pay structures, and compliance</p>
