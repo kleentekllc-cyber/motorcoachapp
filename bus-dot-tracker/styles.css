@@ -232,6 +232,15 @@ body {
     font-weight: 600;
 }
 
+/* Page Sections — tab-switched */
+.page-section {
+    display: none;
+}
+
+.page-section.active {
+    display: block;
+}
+
 /* Dashboard Map */
 .dashboard-map-section {
     background: white;

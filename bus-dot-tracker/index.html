@@ -79,18 +79,22 @@
                 </div>
             </div>
             <nav class="header-tabs">
-                <a href="#" class="header-tab active" onclick="setActiveTab(this, 'dashboard-map-section')">Live</a>
-                <a href="#" class="header-tab" onclick="setActiveTab(this, 'hours-summary')">Hours</a>
-                <a href="#" class="header-tab" onclick="setActiveTab(this, 'pay-calculator')">Pay</a>
-                <a href="#" class="header-tab" onclick="setActiveTab(this, 'trips-management')">Trips</a>
-                <a href="#" class="header-tab" onclick="setActiveTab(this, 'vehicles-management')">Vehicles</a>
-                <a href="#" class="header-tab" onclick="setActiveTab(this, 'multi-trip')">Trip Planner</a>
-                <a href="#" class="header-tab" onclick="setActiveTab(this, 'duty-log')">Duty Log</a>
-                <a href="#" class="header-tab" onclick="setActiveTab(this, 'settings')">Settings</a>
+                <a href="#" class="header-tab active" onclick="setActiveTab(this, 'page-live')">Live</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'page-hours')">Hours</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'page-pay')">Pay</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'page-trips')">Trips</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'page-vehicles')">Vehicles</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'page-planner')">Trip Planner</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'page-controls')">Controls</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'page-duty-log')">Duty Log</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'page-settings')">Settings</a>
             </nav>
         </header>
 
         <div class="container">
+
+        <!-- LIVE PAGE -->
+        <div id="page-live" class="page-section active">
 
         <!-- Dashboard Title & Date Selector -->
         <div class="dashboard-title-section">
@@ -304,7 +308,10 @@
             </div>
         </div>
 
-        <!-- Trips Management Section -->
+        </div><!-- end page-live -->
+
+        <!-- TRIPS PAGE -->
+        <div id="page-trips" class="page-section">
         <div id="trips-management" class="trips-management reorderable-section" data-section-id="trips-management">
             <div class="trips-header">
                 <h1 class="trips-title">🚌 Trips Management</h1>
@@ -500,7 +507,10 @@
             </div>
         </div>
 
-        <!-- Vehicles Management Section -->
+        </div><!-- end page-trips -->
+
+        <!-- VEHICLES PAGE -->
+        <div id="page-vehicles" class="page-section">
         <div id="vehicles-management" class="vehicles-management reorderable-section" data-section-id="vehicles-management">
             <div class="vehicles-header">
                 <h1 class="vehicles-title">🚐 Vehicles Management</h1>
@@ -695,6 +705,10 @@
             </div>
         </div>
 
+        </div><!-- end page-vehicles -->
+
+        <!-- HOURS PAGE -->
+        <div id="page-hours" class="page-section">
         <!-- Hidden Sections (accessible via sidebar) -->
         <div id="current-status">
         <!-- Current Status Section -->
@@ -799,6 +813,10 @@
             </div>
         </div>
 
+        </div><!-- end page-hours -->
+
+        <!-- PAY PAGE -->
+        <div id="page-pay" class="page-section">
         <!-- Driver Pay Calculator Section -->
         <div id="pay-calculator" class="pay-calculator-new reorderable-section" data-section-id="pay-calculator">
             <div class="pay-calc-header">
@@ -1422,6 +1440,10 @@
         </div>
 
 
+        </div><!-- end page-pay -->
+
+        <!-- TRIP PLANNER PAGE -->
+        <div id="page-planner" class="page-section">
         <!-- Multi-Trip Planner Section -->
         <div id="multi-trip" class="multi-trip-planner reorderable-section" data-section-id="multi-trip-planner">
             <h2>🗓️ Multi-Trip Planner (Up to 2 Weeks)</h2>
@@ -1874,6 +1896,10 @@
             </div>
         </div>
 
+        </div><!-- end page-planner -->
+
+        <!-- CONTROLS PAGE -->
+        <div id="page-controls" class="page-section">
         <!-- Status Controls -->
         <div id="status-controls" class="status-controls reorderable-section" data-section-id="status-controls">
             <h2>Change Status</h2>
@@ -1896,6 +1922,10 @@
             </div>
         </div>
 
+        </div><!-- end page-controls -->
+
+        <!-- DUTY LOG PAGE -->
+        <div id="page-duty-log" class="page-section">
         <!-- Duty Log -->
         <div id="duty-log" class="log-section reorderable-section" data-section-id="duty-log">
             <h2>Duty Status Log</h2>
@@ -1910,6 +1940,10 @@
             </div>
         </div>
 
+        </div><!-- end page-duty-log -->
+
+        <!-- SETTINGS PAGE -->
+        <div id="page-settings" class="page-section">
         <!-- Settings Section -->
         <div id="settings" class="settings-section reorderable-section" data-section-id="settings-section">
             <div class="settings-header">
@@ -2358,6 +2392,8 @@
                 </div>
             </div>
         </div>
+
+        </div><!-- end page-settings -->
 
         </div>
     </div>

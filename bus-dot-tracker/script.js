@@ -4274,12 +4274,16 @@ window.addEventListener('load', () => {
     }).addTo(dashMap);
 });
 
-// Header tab click handler
-function setActiveTab(el, sectionId) {
+// Header tab click handler — shows one page, hides all others
+function setActiveTab(el, pageId) {
     document.querySelectorAll('.header-tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
-    const section = document.getElementById(sectionId);
-    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+    const page = document.getElementById(pageId);
+    if (page) {
+        page.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 }
 
 // ============================================
@@ -4290,21 +4294,44 @@ function initNavigation() {
     const navItems = document.querySelectorAll('.nav-item');
     const sections = document.querySelectorAll('[id]');
     
+    // Sidebar nav → page ID map
+    const sidebarPageMap = {
+        'current-status': 'page-live',
+        'hours-summary':  'page-hours',
+        'pay-calculator': 'page-pay',
+        'trips-management': 'page-trips',
+        'vehicles-management': 'page-vehicles',
+        'multi-trip':     'page-planner',
+        'trip-calc':      'page-planner',
+        'status-controls':'page-controls',
+        'duty-log':       'page-duty-log',
+        'settings':       'page-settings',
+    };
+
     // Handle nav item clicks
     navItems.forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();
             const targetId = this.getAttribute('href').substring(1);
-            
-            // Update active state
+            const pageId = sidebarPageMap[targetId] || ('page-' + targetId);
+
             navItems.forEach(nav => nav.classList.remove('active'));
             this.classList.add('active');
-            
-            // Scroll to section smoothly
-            const targetSection = document.getElementById(targetId);
-            if (targetSection) {
-                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+            const page = document.getElementById(pageId);
+            if (page) {
+                page.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
+
+            // Sync header tab active state
+            document.querySelectorAll('.header-tab').forEach(t => {
+                t.classList.remove('active');
+                if (t.getAttribute('onclick') && t.getAttribute('onclick').includes(pageId)) {
+                    t.classList.add('active');
+                }
+            });
         });
     });
     
