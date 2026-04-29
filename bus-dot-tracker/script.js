@@ -4441,11 +4441,22 @@ let userGeoLat = null;
 let userGeoLng = null;
 
 function initUserGeolocation() {
+    // Load cached position immediately so it's ready before the user types
+    try {
+        const cached = localStorage.getItem('tcGeoPos');
+        if (cached) {
+            const p = JSON.parse(cached);
+            userGeoLat = p.lat;
+            userGeoLng = p.lng;
+        }
+    } catch (e) {}
+
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(pos => {
         userGeoLat = pos.coords.latitude;
         userGeoLng = pos.coords.longitude;
-    }, () => { /* permission denied — no bias applied */ });
+        try { localStorage.setItem('tcGeoPos', JSON.stringify({ lat: userGeoLat, lng: userGeoLng })); } catch (e) {}
+    }, () => {});
 }
 
 const acTimers = {};
@@ -4504,13 +4515,31 @@ function closeAC(dropdown) {
 
 async function fetchACSuggestions(input, dropdown, query, onReset) {
     try {
-        let url = `https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=0&countrycodes=us&q=${encodeURIComponent(query)}`;
+        const base = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=0&countrycodes=us&q=${encodeURIComponent(query)}`;
+        let results = [];
+
+        // Step 1: search strictly within ~200-mile radius of user
         if (userGeoLat !== null && userGeoLng !== null) {
-            const delta = 1.5;
-            url += `&viewbox=${userGeoLng - delta},${userGeoLat + delta},${userGeoLng + delta},${userGeoLat - delta}&bounded=0`;
+            const d = 3;
+            const vb = `${userGeoLng - d},${userGeoLat + d},${userGeoLng + d},${userGeoLat - d}`;
+            const localRes = await fetch(`${base}&limit=5&bounded=1&viewbox=${vb}`, { headers: { 'Accept-Language': 'en' } });
+            results = await localRes.json();
         }
-        const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-        const results = await res.json();
+
+        // Step 2: fill remaining slots with national results (no bounding)
+        const remaining = 6 - results.length;
+        if (remaining > 0) {
+            const natRes = await fetch(`${base}&limit=${remaining + 2}`, { headers: { 'Accept-Language': 'en' } });
+            const natData = await natRes.json();
+            const seen = new Set(results.map(r => r.place_id));
+            for (const r of natData) {
+                if (!seen.has(r.place_id) && results.length < 6) {
+                    results.push(r);
+                    seen.add(r.place_id);
+                }
+            }
+        }
+
         onReset();
         dropdown.innerHTML = '';
         if (!results.length) { closeAC(dropdown); return; }
