@@ -4264,6 +4264,7 @@ window.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initSearch();
     initTripCalculatorAutocomplete();
+    initUserGeolocation();
 });
 
 // Initialize dashboard fleet map
@@ -4436,6 +4437,17 @@ let milesDebounceTimer = null;
 
 // ---- Address Autocomplete ----
 
+let userGeoLat = null;
+let userGeoLng = null;
+
+function initUserGeolocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(pos => {
+        userGeoLat = pos.coords.latitude;
+        userGeoLng = pos.coords.longitude;
+    }, () => { /* permission denied — no bias applied */ });
+}
+
 const acTimers = {};
 
 function initAddressAutocomplete(input) {
@@ -4492,7 +4504,11 @@ function closeAC(dropdown) {
 
 async function fetchACSuggestions(input, dropdown, query, onReset) {
     try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=0&countrycodes=us&q=${encodeURIComponent(query)}`;
+        let url = `https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=0&countrycodes=us&q=${encodeURIComponent(query)}`;
+        if (userGeoLat !== null && userGeoLng !== null) {
+            const delta = 1.5;
+            url += `&viewbox=${userGeoLng - delta},${userGeoLat + delta},${userGeoLng + delta},${userGeoLat - delta}&bounded=0`;
+        }
         const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
         const results = await res.json();
         onReset();
