@@ -5,14 +5,11 @@ import { registerRoutes } from "./routes";
 
 const app = express();
 
-app.use(cors({ origin: env.frontendOrigin, credentials: true }));
+const allowedOrigins = env.frontendOrigin.split(",").map(o => o.trim());
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 
 registerRoutes(app);
-
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", env: env.nodeEnv });
-});
 
 app.listen(env.port, () => {
   console.log(`🚀 Backend running on port ${env.port}`);

@@ -4,14 +4,15 @@ services:
     env: node
     rootDir: backend
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npm run start
     envVars:
       - key: NODE_ENV
         value: production
       # Set the following in Render dashboard (do not hardcode secrets):
-      # - SUPABASE_DB_URL
+      # - SUPABASE_DB_URL      (postgres connection string, e.g. postgresql://postgres.xxx:password@host:5432/postgres)
+      # - SUPABASE_URL         (Supabase project URL, e.g. https://xxxx.supabase.co)
       # - SUPABASE_SERVICE_ROLE_KEY
       # - SUPABASE_ANON_KEY
-      # - FRONTEND_ORIGIN
+      # - FRONTEND_ORIGIN      (your Vercel URL, e.g. https://your-app.vercel.app)
       # - GOOGLE_MAPS_API_KEY
