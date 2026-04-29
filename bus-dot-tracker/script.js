@@ -4492,7 +4492,7 @@ function closeAC(dropdown) {
 
 async function fetchACSuggestions(input, dropdown, query, onReset) {
     try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=0&q=${encodeURIComponent(query)}`;
+        const url = `https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=0&countrycodes=us&q=${encodeURIComponent(query)}`;
         const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
         const results = await res.json();
         onReset();
@@ -4600,7 +4600,7 @@ function debounceCalcMiles() {
 
 async function geocode(address) {
     if (!address || address.trim().length < 5) return null;
-    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address.trim())}`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=${encodeURIComponent(address.trim())}`;
     try {
         const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
         const data = await res.json();
