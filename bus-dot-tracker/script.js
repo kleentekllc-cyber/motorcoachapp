@@ -4263,6 +4263,7 @@ window.addEventListener('DOMContentLoaded', () => {
     loadSectionOrder();
     initNavigation();
     initSearch();
+    initTripCalculatorAutocomplete();
 });
 
 // Initialize dashboard fleet map
@@ -4433,6 +4434,95 @@ function clearSearchHighlights() {
 let tcStopCount = 0;
 let milesDebounceTimer = null;
 
+// ---- Address Autocomplete ----
+
+const acTimers = {};
+
+function initAddressAutocomplete(input) {
+    const wrapper = input.parentElement;
+    wrapper.style.position = 'relative';
+
+    const dropdown = document.createElement('ul');
+    dropdown.className = 'ac-dropdown';
+    wrapper.appendChild(dropdown);
+
+    let activeIdx = -1;
+
+    input.addEventListener('input', () => {
+        const q = input.value.trim();
+        activeIdx = -1;
+        if (q.length < 3) { closeAC(dropdown); return; }
+        clearTimeout(acTimers[input.id]);
+        acTimers[input.id] = setTimeout(() => fetchACSuggestions(input, dropdown, q, () => { activeIdx = -1; }), 300);
+    });
+
+    input.addEventListener('keydown', (e) => {
+        const items = dropdown.querySelectorAll('li');
+        if (!items.length) return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIdx = Math.min(activeIdx + 1, items.length - 1);
+            highlightAC(items, activeIdx);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIdx = Math.max(activeIdx - 1, 0);
+            highlightAC(items, activeIdx);
+        } else if (e.key === 'Enter' && activeIdx >= 0) {
+            e.preventDefault();
+            items[activeIdx].click();
+        } else if (e.key === 'Escape') {
+            closeAC(dropdown);
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!wrapper.contains(e.target)) closeAC(dropdown);
+    }, { capture: true });
+}
+
+function highlightAC(items, idx) {
+    items.forEach((li, i) => li.classList.toggle('ac-active', i === idx));
+    if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
+}
+
+function closeAC(dropdown) {
+    dropdown.innerHTML = '';
+    dropdown.style.display = 'none';
+}
+
+async function fetchACSuggestions(input, dropdown, query, onReset) {
+    try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=0&q=${encodeURIComponent(query)}`;
+        const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+        const results = await res.json();
+        onReset();
+        dropdown.innerHTML = '';
+        if (!results.length) { closeAC(dropdown); return; }
+        results.forEach(r => {
+            const li = document.createElement('li');
+            li.textContent = r.display_name;
+            li.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                input.value = r.display_name;
+                closeAC(dropdown);
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                debounceCalcMiles();
+            });
+            dropdown.appendChild(li);
+        });
+        dropdown.style.display = 'block';
+    } catch (e) {
+        closeAC(dropdown);
+    }
+}
+
+function initTripCalculatorAutocomplete() {
+    ['tcPickupLoc', 'tcDropoffLoc'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) initAddressAutocomplete(el);
+    });
+}
+
 function calcTripTimes() {
     const pickup = document.getElementById('tcPickup')?.value;
     const dropoff = document.getElementById('tcDropoff')?.value;
@@ -4483,10 +4573,14 @@ function addTripStop() {
     div.className = 'panel-stop-row';
     div.id = `tcStop${tcStopCount}`;
     div.innerHTML = `
-        <input type="text" class="panel-input tc-stop-loc" placeholder="Stop ${tcStopCount} address..." oninput="debounceCalcMiles()">
+        <div style="flex:1;position:relative;">
+            <input type="text" class="panel-input tc-stop-loc" placeholder="Stop ${tcStopCount} address..." oninput="debounceCalcMiles()">
+        </div>
         <button class="panel-stop-remove" onclick="removeTripStop('tcStop${tcStopCount}')" title="Remove">✕</button>
     `;
     container.appendChild(div);
+    const stopInput = div.querySelector('.tc-stop-loc');
+    initAddressAutocomplete(stopInput);
 }
 
 function removeTripStop(id) {
