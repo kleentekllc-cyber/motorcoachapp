@@ -142,7 +142,7 @@ body {
 /* Header Bar */
 .header-bar {
     background: white;
-    padding: 14px 32px;
+    padding: 0;
     box-shadow: none;
     position: sticky;
     top: 0;
@@ -150,28 +150,120 @@ body {
     border-bottom: 1px solid #E5E7EB;
 }
 
-.header-content {
+.header-top {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 30px;
+    justify-content: space-between;
+    padding: 12px 28px;
+    border-bottom: 1px solid #F3F4F6;
 }
 
-.header-title-section {
-    flex: 1;
-}
-
-.header-bar h1 {
-    font-size: 1.3em;
-    color: #111827;
+.header-title {
+    font-size: 1.15em;
     font-weight: 700;
+    color: #111827;
     margin: 0;
 }
 
-.header-bar .subtitle {
-    font-size: 0.9em;
+.header-group {
+    font-size: 0.85em;
+    font-weight: 500;
     color: #6B7280;
-    margin-top: 5px;
+    cursor: pointer;
+    margin-left: 8px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.header-btn {
+    background: #2563EB;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.header-btn:hover {
+    background: #1D4ED8;
+}
+
+.header-btn-outline {
+    background: white;
+    color: #374151;
+    border: 1px solid #D1D5DB;
+}
+
+.header-btn-outline:hover {
+    background: #F9FAFB;
+}
+
+/* Header Tabs */
+.header-tabs {
+    display: flex;
+    gap: 0;
+    padding: 0 28px;
+}
+
+.header-tab {
+    padding: 10px 16px;
+    font-size: 0.875em;
+    font-weight: 500;
+    color: #6B7280;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.header-tab:hover {
+    color: #111827;
+}
+
+.header-tab.active {
+    color: #2563EB;
+    border-bottom-color: #2563EB;
+    font-weight: 600;
+}
+
+/* Dashboard Map */
+.dashboard-map-section {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    margin-bottom: 24px;
+}
+
+.map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.map-label {
+    font-size: 0.875em;
+    font-weight: 600;
+    color: #111827;
+}
+
+.map-dot {
+    font-size: 0.8em;
+    color: #10B981;
+    font-weight: 600;
+}
+
+#dashboard-map {
+    height: 420px;
+    width: 100%;
 }
 
 .header-search-section {

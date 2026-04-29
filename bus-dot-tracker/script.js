@@ -4265,6 +4265,23 @@ window.addEventListener('DOMContentLoaded', () => {
     initSearch();
 });
 
+// Initialize dashboard fleet map
+window.addEventListener('load', () => {
+    const dashMap = L.map('dashboard-map').setView([33.0, -81.0], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(dashMap);
+});
+
+// Header tab click handler
+function setActiveTab(el, sectionId) {
+    document.querySelectorAll('.header-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    const section = document.getElementById(sectionId);
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // ============================================
 // NAVIGATION & TAB SWITCHING
 // ============================================

@@ -71,8 +71,23 @@
     <div class="main-content">
         <!-- Header Bar -->
         <header class="header-bar">
-            <h1>Bus Driver DOT Hours Tracker</h1>
-            <p class="subtitle">Hours Management & Trip Planning</p>
+            <div class="header-top">
+                <h1 class="header-title">🚌 DOT Tracker <span class="header-group">All Drivers ▾</span></h1>
+                <div class="header-actions">
+                    <button class="header-btn" onclick="showSection('trips-management')">+ Add Trip</button>
+                    <button class="header-btn header-btn-outline" onclick="showSection('settings')">⚙ Settings</button>
+                </div>
+            </div>
+            <nav class="header-tabs">
+                <a href="#" class="header-tab active" onclick="setActiveTab(this, 'dashboard-map-section')">Live</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'hours-summary')">Hours</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'pay-calculator')">Pay</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'trips-management')">Trips</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'vehicles-management')">Vehicles</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'multi-trip')">Trip Planner</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'duty-log')">Duty Log</a>
+                <a href="#" class="header-tab" onclick="setActiveTab(this, 'settings')">Settings</a>
+            </nav>
         </header>
 
         <div class="container">
@@ -133,6 +148,15 @@
             </div>
         </div>
 
+
+        <!-- Fleet Map Section -->
+        <div id="dashboard-map-section" class="dashboard-map-section">
+            <div class="map-header">
+                <span class="map-label">Fleet View — Live</span>
+                <span class="map-dot">● Live</span>
+            </div>
+            <div id="dashboard-map"></div>
+        </div>
 
         <!-- Trip Legality Overview -->
         <div class="dashboard-section reorderable-section" data-section-id="trip-legality">
