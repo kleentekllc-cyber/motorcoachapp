@@ -4425,3 +4425,141 @@ function clearSearchHighlights() {
         section.style.opacity = '1';
     });
 }
+
+// ============================================
+// TRIP CALCULATOR PANEL
+// ============================================
+
+let tcStopCount = 0;
+let milesDebounceTimer = null;
+
+function calcTripTimes() {
+    const pickup = document.getElementById('tcPickup')?.value;
+    const dropoff = document.getElementById('tcDropoff')?.value;
+    const retPickup = document.getElementById('tcReturnPickup')?.value;
+    const retDropoff = document.getElementById('tcReturnDropoff')?.value;
+
+    let totalMs = 0;
+    let earliestMs = null;
+    let latestMs = null;
+
+    function addRange(start, end) {
+        if (!start || !end) return;
+        const s = new Date(start).getTime();
+        const e = new Date(end).getTime();
+        if (isNaN(s) || isNaN(e) || e <= s) return;
+        totalMs += (e - s);
+        if (earliestMs === null || s < earliestMs) earliestMs = s;
+        if (latestMs === null || e > latestMs) latestMs = e;
+    }
+
+    addRange(pickup, dropoff);
+    addRange(retPickup, retDropoff);
+
+    const hoursEl = document.getElementById('tcTotalHours');
+    const daysEl = document.getElementById('tcTripDays');
+
+    if (totalMs > 0) {
+        const totalHours = totalMs / 3600000;
+        const h = Math.floor(totalHours);
+        const m = Math.round((totalHours - h) * 60);
+        hoursEl.textContent = `${h}h ${m}m`;
+    } else {
+        hoursEl.textContent = '—';
+    }
+
+    if (earliestMs !== null && latestMs !== null) {
+        const days = Math.ceil((latestMs - earliestMs) / 86400000);
+        daysEl.textContent = days === 1 ? '1 day' : `${days} days`;
+    } else {
+        daysEl.textContent = '—';
+    }
+}
+
+function addTripStop() {
+    tcStopCount++;
+    const container = document.getElementById('tcStopsContainer');
+    const div = document.createElement('div');
+    div.className = 'panel-stop-row';
+    div.id = `tcStop${tcStopCount}`;
+    div.innerHTML = `
+        <input type="text" class="panel-input tc-stop-loc" placeholder="Stop ${tcStopCount} address..." oninput="debounceCalcMiles()">
+        <button class="panel-stop-remove" onclick="removeTripStop('tcStop${tcStopCount}')" title="Remove">✕</button>
+    `;
+    container.appendChild(div);
+}
+
+function removeTripStop(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.remove();
+        debounceCalcMiles();
+    }
+}
+
+function debounceCalcMiles() {
+    clearTimeout(milesDebounceTimer);
+    document.getElementById('tcMilesStatus').textContent = 'Typing...';
+    document.getElementById('tcTotalMiles').textContent = '—';
+    milesDebounceTimer = setTimeout(calcTotalMiles, 1400);
+}
+
+async function geocode(address) {
+    if (!address || address.trim().length < 5) return null;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address.trim())}`;
+    try {
+        const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+        const data = await res.json();
+        if (data && data.length > 0) {
+            return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        }
+    } catch (e) { /* network error */ }
+    return null;
+}
+
+async function calcTotalMiles() {
+    const pickup = document.getElementById('tcPickupLoc')?.value.trim();
+    const dropoff = document.getElementById('tcDropoffLoc')?.value.trim();
+    const stopInputs = document.querySelectorAll('.tc-stop-loc');
+    const milesEl = document.getElementById('tcTotalMiles');
+    const statusEl = document.getElementById('tcMilesStatus');
+
+    if (!pickup || !dropoff) {
+        milesEl.textContent = '—';
+        statusEl.textContent = '';
+        return;
+    }
+
+    statusEl.textContent = 'Geocoding...';
+
+    const addresses = [pickup, ...Array.from(stopInputs).map(i => i.value.trim()), dropoff];
+    const coords = [];
+    for (const addr of addresses) {
+        coords.push(addr ? await geocode(addr) : null);
+    }
+
+    const validCoords = coords.filter(Boolean);
+    if (validCoords.length < 2) {
+        milesEl.textContent = '—';
+        statusEl.textContent = 'Could not locate one or more addresses';
+        return;
+    }
+
+    statusEl.textContent = 'Getting route...';
+    try {
+        const coordStr = validCoords.map(c => `${c.lng},${c.lat}`).join(';');
+        const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=false`);
+        const data = await res.json();
+        if (data.code === 'Ok' && data.routes?.length > 0) {
+            const miles = (data.routes[0].distance / 1609.344).toFixed(1);
+            milesEl.textContent = `${miles} mi`;
+            statusEl.textContent = validCoords.length > 2 ? `${validCoords.length - 2} stop(s) included` : '';
+        } else {
+            milesEl.textContent = '—';
+            statusEl.textContent = 'Route not found';
+        }
+    } catch (e) {
+        milesEl.textContent = '—';
+        statusEl.textContent = 'Distance lookup failed';
+    }
+}

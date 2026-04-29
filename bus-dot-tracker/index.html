@@ -153,160 +153,220 @@
         </div>
 
 
-        <!-- Fleet Map Section -->
-        <div id="dashboard-map-section" class="dashboard-map-section">
-            <div class="map-header">
-                <span class="map-label">Fleet View — Live</span>
-                <span class="map-dot">● Live</span>
-            </div>
-            <div id="dashboard-map"></div>
-        </div>
+        <!-- Live Two-Column Layout: Trip Calculator Panel + Main Content -->
+        <div class="live-layout">
 
-        <!-- Trip Legality Overview -->
-        <div class="dashboard-section reorderable-section" data-section-id="trip-legality">
-            <div class="section-header">
-                <h2>🚦 Trip Legality Overview</h2>
-                <button class="secondary-btn" onclick="showSection('multi-trip')">+ Add Trip</button>
-            </div>
-            
-            <!-- Segmented Progress Bar -->
-            <div class="legality-bar-container">
-                <div class="legality-bar">
-                    <div class="legality-segment legal-segment" id="legalSegment" style="width: 0%;">
-                        <span class="segment-label" id="legalSegmentLabel"></span>
-                    </div>
-                    <div class="legality-segment warning-segment" id="warningSegment" style="width: 0%;">
-                        <span class="segment-label" id="warningSegmentLabel"></span>
-                    </div>
-                    <div class="legality-segment illegal-segment" id="illegalSegment" style="width: 0%;">
-                        <span class="segment-label" id="illegalSegmentLabel"></span>
-                    </div>
+            <!-- Trip Calculator Panel (secondary sidebar) -->
+            <div class="trip-calc-panel" id="trip-calc">
+                <div class="panel-header">
+                    <span class="panel-header-icon">📍</span>
+                    <span class="panel-header-title">Trip Calculator</span>
                 </div>
-                <div class="legality-legend">
-                    <div class="legend-item">
-                        <div class="legend-color legal-color"></div>
-                        <span>Legal</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color warning-color"></div>
-                        <span>Warning</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color illegal-color"></div>
-                        <span>Illegal</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="legality-grid">
-                <div class="legality-card legal-trips">
-                    <div class="legality-number" id="legalCount">0</div>
-                    <div class="legality-label">Legal Trips</div>
-                </div>
-                <div class="legality-card warning-trips">
-                    <div class="legality-number" id="warningCount">0</div>
-                    <div class="legality-label">Needs Adjustment</div>
-                </div>
-                <div class="legality-card illegal-trips">
-                    <div class="legality-number" id="illegalCount">0</div>
-                    <div class="legality-label">Not Possible</div>
-                </div>
-                <div class="legality-card total-trips">
-                    <div class="legality-number" id="totalTripsCount">0</div>
-                    <div class="legality-label">Total Trips</div>
-                </div>
-            </div>
-        </div>
+                <div class="panel-body">
 
+                    <!-- Time Fields -->
+                    <div class="panel-section-label">Trip Times</div>
 
-        <!-- Driver Status Overview -->
-        <div class="dashboard-section reorderable-section" data-section-id="driver-status">
-            <div class="section-header">
-                <h2>👤 Driver Status Overview</h2>
-                <button class="secondary-btn" onclick="showSection('status-controls')">Change Status</button>
-            </div>
-            <div class="status-overview-grid">
-                <div class="status-overview-card">
-                    <div class="overview-label">HOS Mode</div>
-                    <div class="overview-value" id="overviewHOSMode">70hr/8 day</div>
-                    <button class="overview-btn" onclick="toggleHOSMode()">Toggle Mode</button>
-                </div>
-                <div class="status-overview-card">
-                    <div class="overview-label">Drive</div>
-                    <div class="overview-value" id="overviewDriverHours">10:00</div>
-                    <div class="overview-status" id="overviewDriverStatus">✅ Available</div>
-                </div>
-                <div class="status-overview-card">
-                    <div class="overview-label">Shift</div>
-                    <div class="overview-value" id="overviewShiftHours">15:00</div>
-                    <div class="overview-status" id="overviewShiftStatus">✅ Available</div>
-                </div>
-                <div class="status-overview-card">
-                    <div class="overview-label">Cycle</div>
-                    <div class="overview-value" id="overviewCycleHours">70:00</div>
-                    <div class="overview-status" id="overviewCycleStatus">✅ Available</div>
-                </div>
-            </div>
-        </div>
+                    <div class="panel-field">
+                        <label class="panel-label">Pickup Date &amp; Time</label>
+                        <input type="datetime-local" id="tcPickup" class="panel-input" oninput="calcTripTimes()">
+                    </div>
+                    <div class="panel-field">
+                        <label class="panel-label">Drop-Off Date &amp; Time</label>
+                        <input type="datetime-local" id="tcDropoff" class="panel-input" oninput="calcTripTimes()">
+                    </div>
+                    <div class="panel-field">
+                        <label class="panel-label">Return Pickup Time</label>
+                        <input type="datetime-local" id="tcReturnPickup" class="panel-input" oninput="calcTripTimes()">
+                    </div>
+                    <div class="panel-field">
+                        <label class="panel-label">Return Drop-Off Time</label>
+                        <input type="datetime-local" id="tcReturnDropoff" class="panel-input" oninput="calcTripTimes()">
+                    </div>
 
-        <!-- Upcoming Trips Table -->
-        <div class="dashboard-section reorderable-section" data-section-id="upcoming-trips">
-            <div class="section-header">
-                <h2>📋 Upcoming Trips</h2>
-                <button class="secondary-btn" onclick="showSection('multi-trip')">Manage Trips</button>
-            </div>
-            <div class="trips-table-container">
-                <table class="trips-table">
-                    <thead>
-                        <tr>
-                            <th>Trip #</th>
-                            <th>Date</th>
-                            <th>Distance</th>
-                            <th>Duration</th>
-                            <th>Status</th>
-                            <th>Pay</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tripsTableBody">
-                        <tr class="no-trips-row">
-                            <td colspan="7" style="text-align: center; padding: 40px; color: #6B7280;">
-                                No upcoming trips scheduled. Add trips to get started.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    <!-- Calculated Time Results -->
+                    <div class="panel-calc-block">
+                        <div class="panel-calc-row">
+                            <span class="panel-calc-label">Total Hours</span>
+                            <span class="panel-calc-value" id="tcTotalHours">—</span>
+                        </div>
+                        <div class="panel-calc-row">
+                            <span class="panel-calc-label">Trip Duration</span>
+                            <span class="panel-calc-value" id="tcTripDays">—</span>
+                        </div>
+                    </div>
 
-        <!-- Quick Actions Section -->
-        <div class="dashboard-section reorderable-section" data-section-id="quick-actions">
-            <div class="section-header">
-                <h2>⚡ Quick Actions</h2>
-            </div>
-            <div class="quick-actions-grid">
-                <button class="quick-action-btn create-trip" onclick="showSection('multi-trip')">
-                    <div class="quick-action-icon">➕</div>
-                    <div class="quick-action-label">Create Trip</div>
-                    <div class="quick-action-desc">Schedule new trip</div>
-                </button>
-                <button class="quick-action-btn hos-check" onclick="showSection('trip-calc')">
-                    <div class="quick-action-icon">🧮</div>
-                    <div class="quick-action-label">Run HOS Check</div>
-                    <div class="quick-action-desc">Verify DOT compliance</div>
-                </button>
-                <button class="quick-action-btn add-driver" onclick="alert('Driver management coming soon!')">
-                    <div class="quick-action-icon">👤</div>
-                    <div class="quick-action-label">Add Driver</div>
-                    <div class="quick-action-desc">Manage driver roster</div>
-                </button>
-                <button class="quick-action-btn add-vehicle" onclick="alert('Vehicle management coming soon!')">
-                    <div class="quick-action-icon">🚐</div>
-                    <div class="quick-action-label">Add Vehicle</div>
-                    <div class="quick-action-desc">Manage fleet vehicles</div>
-                </button>
-            </div>
-        </div>
+                    <!-- Location Fields -->
+                    <div class="panel-section-label" style="margin-top: 16px;">Locations</div>
+
+                    <div class="panel-field">
+                        <label class="panel-label">Pickup Location</label>
+                        <input type="text" id="tcPickupLoc" class="panel-input" placeholder="Enter address..." oninput="debounceCalcMiles()">
+                    </div>
+                    <div class="panel-field">
+                        <label class="panel-label">Drop-Off Location</label>
+                        <input type="text" id="tcDropoffLoc" class="panel-input" placeholder="Enter address..." oninput="debounceCalcMiles()">
+                    </div>
+
+                    <!-- Dynamic Stops -->
+                    <div id="tcStopsContainer"></div>
+
+                    <button class="panel-add-stop-btn" onclick="addTripStop()">+ Add Stop</button>
+
+                    <!-- Total Miles -->
+                    <div class="panel-calc-block" style="margin-top: 12px;">
+                        <div class="panel-calc-row">
+                            <span class="panel-calc-label">Total Miles</span>
+                            <span class="panel-calc-value" id="tcTotalMiles">—</span>
+                        </div>
+                        <div class="panel-miles-status" id="tcMilesStatus"></div>
+                    </div>
+
+                </div><!-- end panel-body -->
+            </div><!-- end trip-calc-panel -->
+
+            <!-- Main Live Content (map + overview sections) -->
+            <div class="live-main">
+
+                <!-- Fleet Map Section -->
+                <div id="dashboard-map-section" class="dashboard-map-section">
+                    <div class="map-header">
+                        <span class="map-label">Fleet View — Live</span>
+                        <span class="map-dot">● Live</span>
+                    </div>
+                    <div id="dashboard-map"></div>
+                </div>
+
+                <!-- Trip Legality Overview -->
+                <div class="dashboard-section reorderable-section" data-section-id="trip-legality">
+                    <div class="section-header">
+                        <h2>🚦 Trip Legality Overview</h2>
+                        <button class="secondary-btn" onclick="showSection('multi-trip')">+ Add Trip</button>
+                    </div>
+                    <div class="legality-bar-container">
+                        <div class="legality-bar">
+                            <div class="legality-segment legal-segment" id="legalSegment" style="width: 0%;">
+                                <span class="segment-label" id="legalSegmentLabel"></span>
+                            </div>
+                            <div class="legality-segment warning-segment" id="warningSegment" style="width: 0%;">
+                                <span class="segment-label" id="warningSegmentLabel"></span>
+                            </div>
+                            <div class="legality-segment illegal-segment" id="illegalSegment" style="width: 0%;">
+                                <span class="segment-label" id="illegalSegmentLabel"></span>
+                            </div>
+                        </div>
+                        <div class="legality-legend">
+                            <div class="legend-item"><div class="legend-color legal-color"></div><span>Legal</span></div>
+                            <div class="legend-item"><div class="legend-color warning-color"></div><span>Warning</span></div>
+                            <div class="legend-item"><div class="legend-color illegal-color"></div><span>Illegal</span></div>
+                        </div>
+                    </div>
+                    <div class="legality-grid">
+                        <div class="legality-card legal-trips">
+                            <div class="legality-number" id="legalCount">0</div>
+                            <div class="legality-label">Legal Trips</div>
+                        </div>
+                        <div class="legality-card warning-trips">
+                            <div class="legality-number" id="warningCount">0</div>
+                            <div class="legality-label">Needs Adjustment</div>
+                        </div>
+                        <div class="legality-card illegal-trips">
+                            <div class="legality-number" id="illegalCount">0</div>
+                            <div class="legality-label">Not Possible</div>
+                        </div>
+                        <div class="legality-card total-trips">
+                            <div class="legality-number" id="totalTripsCount">0</div>
+                            <div class="legality-label">Total Trips</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Driver Status Overview -->
+                <div class="dashboard-section reorderable-section" data-section-id="driver-status">
+                    <div class="section-header">
+                        <h2>👤 Driver Status Overview</h2>
+                        <button class="secondary-btn" onclick="showSection('status-controls')">Change Status</button>
+                    </div>
+                    <div class="status-overview-grid">
+                        <div class="status-overview-card">
+                            <div class="overview-label">HOS Mode</div>
+                            <div class="overview-value" id="overviewHOSMode">70hr/8 day</div>
+                            <button class="overview-btn" onclick="toggleHOSMode()">Toggle Mode</button>
+                        </div>
+                        <div class="status-overview-card">
+                            <div class="overview-label">Drive</div>
+                            <div class="overview-value" id="overviewDriverHours">10:00</div>
+                            <div class="overview-status" id="overviewDriverStatus">✅ Available</div>
+                        </div>
+                        <div class="status-overview-card">
+                            <div class="overview-label">Shift</div>
+                            <div class="overview-value" id="overviewShiftHours">15:00</div>
+                            <div class="overview-status" id="overviewShiftStatus">✅ Available</div>
+                        </div>
+                        <div class="status-overview-card">
+                            <div class="overview-label">Cycle</div>
+                            <div class="overview-value" id="overviewCycleHours">70:00</div>
+                            <div class="overview-status" id="overviewCycleStatus">✅ Available</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Trips Table -->
+                <div class="dashboard-section reorderable-section" data-section-id="upcoming-trips">
+                    <div class="section-header">
+                        <h2>📋 Upcoming Trips</h2>
+                        <button class="secondary-btn" onclick="showSection('multi-trip')">Manage Trips</button>
+                    </div>
+                    <div class="trips-table-container">
+                        <table class="trips-table">
+                            <thead>
+                                <tr>
+                                    <th>Trip #</th><th>Date</th><th>Distance</th>
+                                    <th>Duration</th><th>Status</th><th>Pay</th><th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tripsTableBody">
+                                <tr class="no-trips-row">
+                                    <td colspan="7" style="text-align: center; padding: 40px; color: #6B7280;">
+                                        No upcoming trips scheduled. Add trips to get started.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Section -->
+                <div class="dashboard-section reorderable-section" data-section-id="quick-actions">
+                    <div class="section-header">
+                        <h2>⚡ Quick Actions</h2>
+                    </div>
+                    <div class="quick-actions-grid">
+                        <button class="quick-action-btn create-trip" onclick="showSection('multi-trip')">
+                            <div class="quick-action-icon">➕</div>
+                            <div class="quick-action-label">Create Trip</div>
+                            <div class="quick-action-desc">Schedule new trip</div>
+                        </button>
+                        <button class="quick-action-btn hos-check" onclick="showSection('trip-calc')">
+                            <div class="quick-action-icon">🧮</div>
+                            <div class="quick-action-label">Run HOS Check</div>
+                            <div class="quick-action-desc">Verify DOT compliance</div>
+                        </button>
+                        <button class="quick-action-btn add-driver" onclick="alert('Driver management coming soon!')">
+                            <div class="quick-action-icon">👤</div>
+                            <div class="quick-action-label">Add Driver</div>
+                            <div class="quick-action-desc">Manage driver roster</div>
+                        </button>
+                        <button class="quick-action-btn add-vehicle" onclick="alert('Vehicle management coming soon!')">
+                            <div class="quick-action-icon">🚐</div>
+                            <div class="quick-action-label">Add Vehicle</div>
+                            <div class="quick-action-desc">Manage fleet vehicles</div>
+                        </button>
+                    </div>
+                </div>
+
+            </div><!-- end live-main -->
+        </div><!-- end live-layout -->
 
         </div><!-- end page-live -->
 

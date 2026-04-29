@@ -1243,9 +1243,6 @@ h2 {
     color: #047857;
 }
 
-.pay-input-section {
-    /* Already styled with existing classes */
-}
 
 /* Pay Calculator Styles (Legacy) */
 .pay-calculator {
@@ -3355,6 +3352,207 @@ h2 {
     background: #F3E8FF;
     border-color: #7C3AED;
     box-shadow: 0 5px 20px rgba(139, 92, 246, 0.3);
+}
+
+/* ============================================
+   LIVE PAGE TWO-COLUMN LAYOUT
+   ============================================ */
+
+.live-layout {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+}
+
+/* Trip Calculator Panel */
+.trip-calc-panel {
+    width: 268px;
+    flex-shrink: 0;
+    background: #1A2332;
+    color: #E5E7EB;
+    overflow-y: auto;
+    border-right: 1px solid #2D3748;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 14px;
+    background: #111827;
+    border-bottom: 1px solid #2D3748;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.panel-header-icon {
+    font-size: 0.95em;
+}
+
+.panel-header-title {
+    font-size: 0.88em;
+    font-weight: 700;
+    color: #F9FAFB;
+    letter-spacing: 0.01em;
+}
+
+.panel-body {
+    padding: 14px 13px 24px;
+}
+
+.panel-section-label {
+    font-size: 0.68em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: #6B7280;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #2D3748;
+}
+
+.panel-field {
+    margin-bottom: 9px;
+}
+
+.panel-label {
+    display: block;
+    font-size: 0.72em;
+    color: #9CA3AF;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.panel-input {
+    width: 100%;
+    background: #1F2937;
+    border: 1px solid #374151;
+    border-radius: 5px;
+    padding: 7px 8px;
+    color: #F9FAFB;
+    font-size: 0.78em;
+    outline: none;
+    transition: border-color 0.15s;
+    font-family: inherit;
+}
+
+.panel-input:focus {
+    border-color: #2563EB;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.panel-input::placeholder {
+    color: #4B5563;
+}
+
+/* Calculated results block */
+.panel-calc-block {
+    background: #111827;
+    border: 1px solid #2D3748;
+    border-radius: 6px;
+    padding: 9px 11px;
+    margin-top: 4px;
+    margin-bottom: 6px;
+}
+
+.panel-calc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.panel-calc-row + .panel-calc-row {
+    border-top: 1px solid #2D3748;
+    margin-top: 5px;
+    padding-top: 7px;
+}
+
+.panel-calc-label {
+    font-size: 0.73em;
+    color: #9CA3AF;
+}
+
+.panel-calc-value {
+    font-size: 0.83em;
+    font-weight: 700;
+    color: #60A5FA;
+}
+
+/* Stop row */
+.panel-stop-row {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.panel-stop-row .panel-input {
+    flex: 1;
+}
+
+.panel-stop-remove {
+    background: none;
+    border: none;
+    color: #EF4444;
+    cursor: pointer;
+    font-size: 0.9em;
+    padding: 5px 4px;
+    border-radius: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.panel-stop-remove:hover {
+    background: rgba(239, 68, 68, 0.15);
+}
+
+/* Add Stop button */
+.panel-add-stop-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed #374151;
+    color: #6B7280;
+    border-radius: 5px;
+    padding: 7px;
+    font-size: 0.75em;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 4px;
+    font-family: inherit;
+}
+
+.panel-add-stop-btn:hover {
+    border-color: #2563EB;
+    color: #60A5FA;
+    background: rgba(37, 99, 235, 0.08);
+}
+
+/* Miles status message */
+.panel-miles-status {
+    font-size: 0.68em;
+    color: #6B7280;
+    text-align: center;
+    min-height: 14px;
+    margin-top: 5px;
+}
+
+/* Main live content (right of panel) */
+.live-main {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    background: #F9FAFB;
+}
+
+.live-main .dashboard-section {
+    margin-bottom: 20px;
+}
+
+.live-main .dashboard-map-section {
+    margin-bottom: 20px;
 }
 
 .reorder-mode .reorderable-section::before {
