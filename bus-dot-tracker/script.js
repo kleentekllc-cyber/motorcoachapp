@@ -4349,22 +4349,24 @@ function initSearch() {
 
 function performSearch(query) {
     clearSearchHighlights();
-    
-    const sections = document.querySelectorAll('.card, .section');
-    let foundCount = 0;
-    
+
+    const sections = document.querySelectorAll('.reorderable-section, #current-status, #trip-calc');
+    let firstMatch = null;
+
     sections.forEach(section => {
         const text = section.textContent.toLowerCase();
         if (text.includes(query)) {
             section.classList.add('search-highlight');
-            section.style.display = 'block';
-            foundCount++;
+            section.style.opacity = '1';
+            if (!firstMatch) firstMatch = section;
         } else {
-            section.style.opacity = '0.4';
+            section.style.opacity = '0.3';
         }
     });
-    
-    console.log(`Found ${foundCount} results for "${query}"`);
+
+    if (firstMatch) {
+        firstMatch.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 function clearSearchHighlights() {
@@ -4373,10 +4375,9 @@ function clearSearchHighlights() {
         el.classList.remove('search-highlight');
         el.style.opacity = '1';
     });
-    
-    const sections = document.querySelectorAll('.card, .section');
+
+    const sections = document.querySelectorAll('.reorderable-section, #current-status, #trip-calc');
     sections.forEach(section => {
-        section.style.display = '';
         section.style.opacity = '1';
     });
 }
