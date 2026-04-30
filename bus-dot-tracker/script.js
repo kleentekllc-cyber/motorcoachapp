@@ -4554,6 +4554,7 @@ function calcTotalMiles() {
 // ============================================
 
 function onGoogleMapsLoaded() {
+    console.log('Google Maps loaded');
     // Fleet map
     const mapEl = document.getElementById('dashboard-map');
     if (mapEl) {

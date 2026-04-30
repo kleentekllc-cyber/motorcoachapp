@@ -3538,6 +3538,7 @@ h2 {
     box-shadow: 0 8px 20px rgba(0,0,0,0.5) !important;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
     margin-top: -1px;
+    z-index: 99999 !important;
 }
 
 .pac-item {
