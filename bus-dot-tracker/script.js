@@ -1739,16 +1739,18 @@ function updateDriverStatusOverview(currentBreakTime) {
     }
     
     // Calculate next reset
-    if (currentStatus === 'off-duty' && statusStartTime) {
-        const currentOffDutyHours = (Date.now() - statusStartTime) / (1000 * 60 * 60);
-        const hoursToRestart = Math.max(0, 34 - currentOffDutyHours);
-        document.getElementById('overviewNextReset').textContent = `${hoursToRestart.toFixed(1)}H`;
-    } else {
-        document.getElementById('overviewNextReset').textContent = '34HR Needed';
+    const nextResetEl = document.getElementById('overviewNextReset');
+    if (nextResetEl) {
+        if (currentStatus === 'off-duty' && statusStartTime) {
+            const currentOffDutyHours = (Date.now() - statusStartTime) / (1000 * 60 * 60);
+            nextResetEl.textContent = `${Math.max(0, 34 - currentOffDutyHours).toFixed(1)}H`;
+        } else {
+            nextResetEl.textContent = '34HR Needed';
+        }
     }
-    
-    // Today's summary
-    document.getElementById('overviewTodaySummary').textContent = `${trips.length} Trips`;
+
+    const todaySummaryEl = document.getElementById('overviewTodaySummary');
+    if (todaySummaryEl) todaySummaryEl.textContent = `${trips.length} Trips`;
 }
 
 // Update trips table
