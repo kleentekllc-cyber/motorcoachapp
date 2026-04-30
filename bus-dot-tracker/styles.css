@@ -3530,6 +3530,24 @@ h2 {
     background: rgba(37, 99, 235, 0.08);
 }
 
+/* PlaceAutocompleteElement container */
+.pac-field-wrap {
+    width: 100%;
+    display: block;
+}
+
+.pac-field-wrap gmp-place-autocomplete {
+    width: 100%;
+    display: block;
+    --gmpx-color-surface: #1F2937;
+    --gmpx-color-on-surface: #F9FAFB;
+    --gmpx-color-on-surface-variant: #9CA3AF;
+    --gmpx-color-primary: #2563EB;
+    --gmpx-color-outline: #374151;
+    --gmpx-font-family-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --gmpx-font-size-base: 0.78rem;
+}
+
 /* Google Places Autocomplete dropdown — dark theme */
 .pac-container {
     background: #1F2937 !important;

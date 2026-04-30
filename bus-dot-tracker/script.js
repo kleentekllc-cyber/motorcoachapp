@@ -4425,17 +4425,19 @@ function clearSearchHighlights() {
 
 let tcStopCount = 0;
 
-// ---- Google Places Autocomplete ----
+// ---- Google Places Autocomplete (PlaceAutocompleteElement) ----
 
-function initAddressAutocomplete(input) {
-    const ac = new google.maps.places.Autocomplete(input, {
+const tcAddressStore = {};
+
+function initAddressAutocomplete(container) {
+    const pac = new google.maps.places.PlaceAutocompleteElement({
         componentRestrictions: { country: 'us' },
-        fields: ['formatted_address'],
-        types: ['address']
     });
-    ac.addListener('place_changed', () => {
-        const place = ac.getPlace();
-        if (place.formatted_address) input.value = place.formatted_address;
+    container.appendChild(pac);
+
+    pac.addEventListener('gmp-placeselect', async ({ place }) => {
+        await place.fetchFields({ fields: ['formattedAddress'] });
+        tcAddressStore[container.id] = place.formattedAddress || '';
         calcTotalMiles();
     });
 }
@@ -4492,26 +4494,31 @@ function calcTripTimes() {
 
 function addTripStop() {
     tcStopCount++;
+    const stopId = `tcStop${tcStopCount}`;
     const container = document.getElementById('tcStopsContainer');
-    const div = document.createElement('div');
-    div.className = 'panel-stop-row';
-    div.id = `tcStop${tcStopCount}`;
-    div.innerHTML = `
-        <input type="text" class="panel-input tc-stop-loc" placeholder="Stop ${tcStopCount} address...">
-        <button class="panel-stop-remove" onclick="removeTripStop('tcStop${tcStopCount}')" title="Remove">✕</button>
+    const row = document.createElement('div');
+    row.className = 'panel-stop-row';
+    row.id = `${stopId}Row`;
+    row.innerHTML = `
+        <div id="${stopId}" class="pac-field-wrap" style="flex:1;"></div>
+        <button class="panel-stop-remove" onclick="removeTripStop(${tcStopCount})" title="Remove">✕</button>
     `;
-    container.appendChild(div);
-    initAddressAutocomplete(div.querySelector('.tc-stop-loc'));
+    container.appendChild(row);
+    initAddressAutocomplete(document.getElementById(stopId));
 }
 
-function removeTripStop(id) {
-    const el = document.getElementById(id);
-    if (el) { el.remove(); calcTotalMiles(); }
+function removeTripStop(num) {
+    const row = document.getElementById(`tcStop${num}Row`);
+    if (row) {
+        delete tcAddressStore[`tcStop${num}`];
+        row.remove();
+        calcTotalMiles();
+    }
 }
 
 function calcTotalMiles() {
-    const pickup = document.getElementById('tcPickupLoc')?.value.trim();
-    const dropoff = document.getElementById('tcDropoffLoc')?.value.trim();
+    const pickup = tcAddressStore['tcPickupLoc'];
+    const dropoff = tcAddressStore['tcDropoffLoc'];
     const milesEl = document.getElementById('tcTotalMiles');
     const statusEl = document.getElementById('tcMilesStatus');
 
@@ -4521,10 +4528,11 @@ function calcTotalMiles() {
         return;
     }
 
-    const stopInputs = Array.from(document.querySelectorAll('.tc-stop-loc'))
-        .map(i => i.value.trim()).filter(Boolean);
-
-    const waypoints = stopInputs.map(addr => ({ location: addr, stopover: true }));
+    const stopKeys = Object.keys(tcAddressStore).filter(k => k.startsWith('tcStop'));
+    const waypoints = stopKeys
+        .map(k => tcAddressStore[k])
+        .filter(Boolean)
+        .map(addr => ({ location: addr, stopover: true }));
 
     statusEl.textContent = 'Calculating route...';
 
