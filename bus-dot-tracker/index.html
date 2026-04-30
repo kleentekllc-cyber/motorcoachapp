@@ -200,11 +200,11 @@
 
                     <div class="panel-field">
                         <label class="panel-label">Pickup Location</label>
-                        <div id="tcPickupLoc" class="pac-field-wrap"></div>
+                        <div id="tcPickupLoc" class="pac-field-wrap" aria-label="Pickup Location"></div>
                     </div>
                     <div class="panel-field">
                         <label class="panel-label">Drop-Off Location</label>
-                        <div id="tcDropoffLoc" class="pac-field-wrap"></div>
+                        <div id="tcDropoffLoc" class="pac-field-wrap" aria-label="Drop-Off Location"></div>
                     </div>
 
                     <!-- Dynamic Stops -->
@@ -1544,16 +1544,16 @@
                 <h4 style="margin: 25px 0 15px 0; color: #2563EB;">📍 Route Information</h4>
                 <div class="trip-input-grid">
                     <div class="input-group">
-                        <label for="trip_pickupLocation">Pickup Location <span class="required">*</span></label>
-                        <input type="text" id="trip_pickupLocation" class="location-input" placeholder="Enter pickup address" onchange="calculateTripDistance()">
+                        <label for="mt_pickupLocation">Pickup Location <span class="required">*</span></label>
+                        <input type="text" id="mt_pickupLocation" class="location-input" placeholder="Enter pickup address" onchange="calculateTripDistance()">
                     </div>
                     <div class="input-group">
-                        <label for="trip_dropoffLocation">Dropoff Location <span class="required">*</span></label>
-                        <input type="text" id="trip_dropoffLocation" class="location-input" placeholder="Enter dropoff address" onchange="calculateTripDistance()">
+                        <label for="mt_dropoffLocation">Dropoff Location <span class="required">*</span></label>
+                        <input type="text" id="mt_dropoffLocation" class="location-input" placeholder="Enter dropoff address" onchange="calculateTripDistance()">
                     </div>
                     <div class="input-group">
-                        <label for="trip_miles">Miles <span class="required">*</span></label>
-                        <input type="number" id="trip_miles" placeholder="Auto-calculated or enter manually" min="1" step="0.1">
+                        <label for="mt_miles">Miles <span class="required">*</span></label>
+                        <input type="number" id="mt_miles" placeholder="Auto-calculated or enter manually" min="1" step="0.1">
                         <small style="color: #6B7280; font-size: 0.85em;">Auto-fills when addresses are entered</small>
                     </div>
                     <div class="input-group">
@@ -1615,8 +1615,8 @@
                         </select>
                     </div>
                     <div class="input-group hidden" id="partTimeVehicleGroup">
-                        <label for="vehicle_type">Vehicle Type <span class="required">*</span></label>
-                        <select id="vehicle_type" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
+                        <label for="pay_vehicle_type">Vehicle Type <span class="required">*</span></label>
+                        <select id="pay_vehicle_type" name="pay_vehicle_type" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
                             <option value="sedan-suv">Sedan/SUV Retail</option>
                             <option value="van-motorcoach">Van-Motorcoach Retail</option>
                             <option value="half-day">Half Day/Contract (≤6 hrs)</option>
@@ -1902,8 +1902,8 @@
                 <p class="hours-instruction">Use these fields to manually enter hours for planning, or leave empty to use tracked hours</p>
                 <div class="manual-hours-grid">
                     <div class="input-group">
-                        <label for="trip_miles">Miles <span class="required">*</span></label>
-                        <input type="number" id="trip_miles" placeholder="Trip Distance" min="1" step="0.1">
+                        <label for="manual_miles">Miles <span class="required">*</span></label>
+                        <input type="number" id="manual_miles" name="manual_miles" placeholder="Trip Distance" min="1" step="0.1">
                     </div>
                     <div class="input-group">
                         <label for="manualDutyInput">On-Duty Hours Used</label>

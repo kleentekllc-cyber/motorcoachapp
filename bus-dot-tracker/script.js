@@ -2891,7 +2891,7 @@ function editTrip(tripId) {
     editingTripId = tripId;
     
     // Populate all form fields
-    document.getElementById('trip_miles').value = trip.miles;
+    document.getElementById('mt_miles').value = trip.miles;
     document.getElementById('trip_avgSpeed').value = trip.avgSpeedMph;
     document.getElementById('trip_duration').value = trip.tripDurationDays || 1;
     document.getElementById('trip_pickupTime').value = trip.pickupTime || '';
@@ -2908,7 +2908,7 @@ function editTrip(tripId) {
     if (trip.driverType === 'full-time') {
         document.getElementById('trip_type').value = trip.tripType || 'contract';
     } else if (trip.driverType === 'part-time') {
-        document.getElementById('vehicle_type').value = trip.vehicleType || 'sedan-suv';
+        document.getElementById('pay_vehicle_type').value = trip.vehicleType || 'sedan-suv';
     }
     
     document.getElementById('trip_revenue').value = trip.tripRevenue || 0;
@@ -2934,7 +2934,7 @@ function cancelEdit() {
     addBtn.style.background = '';
     
     // Clear form
-    document.getElementById('trip_miles').value = '';
+    document.getElementById('mt_miles').value = '';
     document.getElementById('trip_pickupTime').value = '';
     document.getElementById('trip_dropoffTime').value = '';
     document.getElementById('trip_returnPickupTime').value = '';
@@ -2945,7 +2945,7 @@ function cancelEdit() {
 function addTrip() {
     const startDate = document.getElementById('trip_startDate').value;
     const endDate = document.getElementById('trip_endDate').value;
-    const miles = parseFloat(document.getElementById('trip_miles').value);
+    const miles = parseFloat(document.getElementById('mt_miles').value);
     const avgSpeed = parseFloat(document.getElementById('trip_avgSpeed').value);
     const tripDuration = parseFloat(document.getElementById('trip_duration').value) || 1;
     const pickupTime = document.getElementById('trip_pickupTime').value;
@@ -2959,7 +2959,7 @@ function addTrip() {
     // Pay inputs
     const driverType = document.getElementById('driver_type').value;
     const tripType = driverType === 'full-time' ? document.getElementById('trip_type').value : null;
-    const vehicleType = driverType === 'part-time' ? document.getElementById('vehicle_type').value : null;
+    const vehicleType = driverType === 'part-time' ? document.getElementById('pay_vehicle_type').value : null;
     const tripRevenue = parseFloat(document.getElementById('trip_revenue').value) || 0;
     const isSafetyEligible = document.getElementById('trip_safetyEligible').checked;
     const includesRelay = document.getElementById('trip_includesRelay').checked;
@@ -3183,7 +3183,7 @@ function addTrip() {
     saveData();
     
     // Clear form
-    document.getElementById('trip_miles').value = '';
+    document.getElementById('mt_miles').value = '';
     document.getElementById('trip_pickupTime').value = '';
     document.getElementById('trip_dropoffTime').value = '';
     document.getElementById('trip_returnPickupTime').value = '';
@@ -3927,9 +3927,9 @@ const GOOGLE_MAPS_API_KEY = ''; // Add your API key here
 
 // Calculate trip distance automatically from addresses
 async function calculateTripDistance() {
-    const pickupLocation = document.getElementById('trip_pickupLocation')?.value.trim();
-    const dropoffLocation = document.getElementById('trip_dropoffLocation')?.value.trim();
-    const milesInput = document.getElementById('trip_miles');
+    const pickupLocation = document.getElementById('mt_pickupLocation')?.value.trim();
+    const dropoffLocation = document.getElementById('mt_dropoffLocation')?.value.trim();
+    const milesInput = document.getElementById('mt_miles');
     
     if (!pickupLocation || !dropoffLocation) {
         return; // Need both addresses
