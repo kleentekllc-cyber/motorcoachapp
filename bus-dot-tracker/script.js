@@ -3921,77 +3921,41 @@ function updateLegalityZones(totalDrivingHours) {
     }
 }
 
-// Google Maps API Configuration
-// To enable automatic distance calculation, add your Google Maps API key here:
-const GOOGLE_MAPS_API_KEY = ''; // Add your API key here
-
-// Calculate trip distance automatically from addresses
-async function calculateTripDistance() {
-    const pickupLocation = tcAddressStore['mt_pickupLocation'] || '';
-    const dropoffLocation = tcAddressStore['mt_dropoffLocation'] || '';
+// Calculate trip distance using Google Directions Service
+function calculateTripDistance() {
+    const pickup = tcAddressStore['mt_pickupLocation'] || '';
+    const dropoff = tcAddressStore['mt_dropoffLocation'] || '';
     const milesInput = document.getElementById('mt_miles');
-    
-    if (!pickupLocation || !dropoffLocation) {
-        return; // Need both addresses
+
+    if (!pickup || !dropoff) return;
+
+    if (milesInput) {
+        milesInput.placeholder = 'Calculating...';
+        milesInput.value = '';
     }
-    
-    if (!GOOGLE_MAPS_API_KEY) {
-        // No API key configured - show helpful message
-        const calculateBtn = document.querySelector('.add-trip-btn');
-        if (calculateBtn && !document.getElementById('apiKeyWarning')) {
-            const warning = document.createElement('div');
-            warning.id = 'apiKeyWarning';
-            warning.className = 'settings-info-box';
-            warning.style.marginTop = '20px';
-            warning.innerHTML = `
-                <strong>🔑 Google Maps API Key Required:</strong><br>
-                To enable automatic distance calculation from addresses, please add your Google Maps API key to script.js.<br>
-                For now, you can manually enter the distance in miles.
-            `;
-            calculateBtn.parentElement.insertBefore(warning, calculateBtn);
-        }
-        return;
-    }
-    
-    try {
-        // Show loading state
-        if (milesInput) {
-            milesInput.value = 'Calculating...';
-            milesInput.disabled = true;
-        }
-        
-        // Call Google Maps Distance Matrix API
-        const origin = encodeURIComponent(pickupLocation);
-        const destination = encodeURIComponent(dropoffLocation);
-        const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&units=imperial&key=${GOOGLE_MAPS_API_KEY}`;
-        
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        if (data.status === 'OK' && data.rows[0].elements[0].status === 'OK') {
-            // Extract distance in miles
-            const distanceText = data.rows[0].elements[0].distance.text;
-            const distanceMiles = parseFloat(distanceText.replace(/,/g, ''));
-            
+
+    const svc = new google.maps.DirectionsService();
+    svc.route({
+        origin: pickup,
+        destination: dropoff,
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.IMPERIAL
+    }, (result, status) => {
+        if (status === 'OK') {
+            let totalMeters = 0;
+            result.routes[0].legs.forEach(leg => { totalMeters += leg.distance.value; });
+            const miles = (totalMeters / 1609.344).toFixed(1);
             if (milesInput) {
-                milesInput.value = distanceMiles.toFixed(1);
-                milesInput.disabled = false;
+                milesInput.value = miles;
+                milesInput.placeholder = 'Auto-calculated or enter manually';
             }
-            
-            // Show success message
-            console.log(`✅ Distance calculated: ${distanceMiles.toFixed(1)} miles`);
         } else {
-            throw new Error('Unable to calculate distance');
+            if (milesInput) {
+                milesInput.value = '';
+                milesInput.placeholder = 'Enter miles manually';
+            }
         }
-    } catch (error) {
-        console.error('Error calculating distance:', error);
-        if (milesInput) {
-            milesInput.value = '';
-            milesInput.placeholder = 'Enter miles manually';
-            milesInput.disabled = false;
-        }
-        // Don't alert - just allow manual entry
-    }
+    });
 }
 
 // Load data from localStorage
