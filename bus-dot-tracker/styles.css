@@ -3536,6 +3536,15 @@ h2 {
     display: block;
 }
 
+/* Planner form pac fields — light theme to match surrounding form */
+.mt-pac {
+    --gmpx-color-surface: #ffffff;
+    --gmpx-color-on-surface: #111827;
+    --gmpx-color-on-surface-variant: #6B7280;
+    --gmpx-color-primary: #2563EB;
+    --gmpx-color-outline: #D1D5DB;
+}
+
 .pac-field-wrap gmp-place-autocomplete {
     width: 100%;
     display: block;

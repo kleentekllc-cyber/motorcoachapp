@@ -3927,8 +3927,8 @@ const GOOGLE_MAPS_API_KEY = ''; // Add your API key here
 
 // Calculate trip distance automatically from addresses
 async function calculateTripDistance() {
-    const pickupLocation = document.getElementById('mt_pickupLocation')?.value.trim();
-    const dropoffLocation = document.getElementById('mt_dropoffLocation')?.value.trim();
+    const pickupLocation = tcAddressStore['mt_pickupLocation'] || '';
+    const dropoffLocation = tcAddressStore['mt_dropoffLocation'] || '';
     const milesInput = document.getElementById('mt_miles');
     
     if (!pickupLocation || !dropoffLocation) {
@@ -4392,7 +4392,8 @@ let tcStopCount = 0;
 
 const tcAddressStore = {};
 
-function initAddressAutocomplete(container) {
+function initAddressAutocomplete(container, onSelect) {
+    const callback = onSelect || calcTotalMiles;
     const pac = new google.maps.places.PlaceAutocompleteElement({
         componentRestrictions: { country: 'us' },
     });
@@ -4400,29 +4401,31 @@ function initAddressAutocomplete(container) {
 
     pac.addEventListener('gmp-placeselect', async (event) => {
         const place = event.place;
-        console.log('Place selected:', place);
         try {
             await place.fetchFields({ fields: ['formattedAddress', 'displayName'] });
             const addr = place.formattedAddress || place.displayName || '';
-            console.log('Address stored for', container.id, ':', addr);
             tcAddressStore[container.id] = addr;
-            calcTotalMiles();
+            callback();
         } catch (err) {
-            console.error('fetchFields failed:', err);
-            // Fallback: use the text content of the pac element's input
             const inner = pac.querySelector('input');
             if (inner && inner.value) {
                 tcAddressStore[container.id] = inner.value;
-                calcTotalMiles();
+                callback();
             }
         }
     });
 }
 
 function initTripCalculatorAutocomplete() {
+    // Trip calculator panel (Live page)
     ['tcPickupLoc', 'tcDropoffLoc'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) initAddressAutocomplete(el);
+        if (el) initAddressAutocomplete(el, calcTotalMiles);
+    });
+    // Multi-Trip Planner fields
+    ['mt_pickupLocation', 'mt_dropoffLocation'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) initAddressAutocomplete(el, calculateTripDistance);
     });
 }
 
