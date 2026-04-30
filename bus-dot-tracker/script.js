@@ -4435,10 +4435,24 @@ function initAddressAutocomplete(container) {
     });
     container.appendChild(pac);
 
-    pac.addEventListener('gmp-placeselect', async ({ place }) => {
-        await place.fetchFields({ fields: ['formattedAddress'] });
-        tcAddressStore[container.id] = place.formattedAddress || '';
-        calcTotalMiles();
+    pac.addEventListener('gmp-placeselect', async (event) => {
+        const place = event.place;
+        console.log('Place selected:', place);
+        try {
+            await place.fetchFields({ fields: ['formattedAddress', 'displayName'] });
+            const addr = place.formattedAddress || place.displayName || '';
+            console.log('Address stored for', container.id, ':', addr);
+            tcAddressStore[container.id] = addr;
+            calcTotalMiles();
+        } catch (err) {
+            console.error('fetchFields failed:', err);
+            // Fallback: use the text content of the pac element's input
+            const inner = pac.querySelector('input');
+            if (inner && inner.value) {
+                tcAddressStore[container.id] = inner.value;
+                calcTotalMiles();
+            }
+        }
     });
 }
 
@@ -4535,6 +4549,7 @@ function calcTotalMiles() {
         .map(addr => ({ location: addr, stopover: true }));
 
     statusEl.textContent = 'Calculating route...';
+    console.log('Directions request:', pickup, '→', dropoff, waypoints);
 
     const svc = new google.maps.DirectionsService();
     svc.route({
@@ -4544,6 +4559,7 @@ function calcTotalMiles() {
         travelMode: google.maps.TravelMode.DRIVING,
         unitSystem: google.maps.UnitSystem.IMPERIAL
     }, (result, status) => {
+        console.log('Directions status:', status, result);
         if (status === 'OK') {
             let totalMeters = 0;
             result.routes[0].legs.forEach(leg => { totalMeters += leg.distance.value; });
@@ -4552,7 +4568,7 @@ function calcTotalMiles() {
             statusEl.textContent = waypoints.length ? `${waypoints.length} stop(s) included` : '';
         } else {
             milesEl.textContent = '—';
-            statusEl.textContent = 'Route not found';
+            statusEl.textContent = `Error: ${status}`;
         }
     });
 }
