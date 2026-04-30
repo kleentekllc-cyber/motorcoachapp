@@ -2416,7 +2416,6 @@ window.addEventListener('load', () => {
     renderTrips();
     updateTripsManagementTable();
     renderVehiclesGrid();
-    initializeMap();
     updateHOSModeDisplay();
     setToday();
     
@@ -2428,91 +2427,70 @@ window.addEventListener('load', () => {
     }
 });
 
-// Initialize Leaflet map
+// Initialize Google Map (trip planner map — separate from dashboard map)
 function initializeMap() {
-    // Center map on USA
-    map = L.map('map').setView([39.8283, -98.5795], 4);
-    
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
-    }).addTo(map);
-    
-    // Handle map clicks
-    map.on('click', function(e) {
-        handleMapClick(e.latlng);
+    const mapEl = document.getElementById('map');
+    if (!mapEl || map) return;
+
+    map = new google.maps.Map(mapEl, {
+        center: { lat: 39.8283, lng: -98.5795 },
+        zoom: 4,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false
+    });
+
+    map.addListener('click', (e) => {
+        handleMapClick(e.latLng);
     });
 }
 
 // Handle map clicks for start/destination
-function handleMapClick(latlng) {
+function handleMapClick(latLng) {
     if (clickCount === 0) {
-        // First click - set start point
-        if (startMarker) {
-            map.removeLayer(startMarker);
-        }
-        
-        const greenIcon = L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
+        if (startMarker) startMarker.setMap(null);
+        startMarker = new google.maps.Marker({
+            position: latLng,
+            map,
+            title: 'START',
+            icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
         });
-        
-        startMarker = L.marker(latlng, { icon: greenIcon })
-            .addTo(map)
-            .bindPopup('<b>START</b>').openPopup();
-        
+        new google.maps.InfoWindow({ content: '<b>START</b>' }).open(map, startMarker);
         clickCount = 1;
     } else if (clickCount === 1) {
-        // Second click - set destination
-        if (endMarker) {
-            map.removeLayer(endMarker);
-        }
-        
-        const redIcon = L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
+        if (endMarker) endMarker.setMap(null);
+        endMarker = new google.maps.Marker({
+            position: latLng,
+            map,
+            title: 'DESTINATION',
+            icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
         });
-        
-        endMarker = L.marker(latlng, { icon: redIcon })
-            .addTo(map)
-            .bindPopup('<b>DESTINATION</b>').openPopup();
-        
-        // Draw line between points
-        if (routeLine) {
-            map.removeLayer(routeLine);
-        }
-        
-        routeLine = L.polyline([startMarker.getLatLng(), endMarker.getLatLng()], {
-            color: '#667eea',
-            weight: 3,
-            opacity: 0.7
-        }).addTo(map);
-        
-        // Calculate distance
+        new google.maps.InfoWindow({ content: '<b>DESTINATION</b>' }).open(map, endMarker);
+
+        if (routeLine) routeLine.setMap(null);
+        routeLine = new google.maps.Polyline({
+            path: [startMarker.getPosition(), endMarker.getPosition()],
+            geodesic: true,
+            strokeColor: '#667eea',
+            strokeOpacity: 0.7,
+            strokeWeight: 3,
+            map
+        });
+
+        const s = startMarker.getPosition();
+        const e = endMarker.getPosition();
         const distance = calculateDistance(
-            startMarker.getLatLng(),
-            endMarker.getLatLng()
+            { lat: s.lat(), lng: s.lng() },
+            { lat: e.lat(), lng: e.lng() }
         );
-        
-        // Update mileage input
         document.getElementById('mileageInput').value = distance.toFixed(1);
-        
-        clickCount = 0; // Reset for next trip
+        clickCount = 0;
     }
 }
 
-// Calculate distance between two points using Haversine formula
+// Calculate distance between two {lat, lng} points using Haversine formula
 function calculateDistance(latlng1, latlng2) {
-    const R = 3958.8; // Earth's radius in miles
+    const R = 3958.8;
     const lat1 = latlng1.lat * Math.PI / 180;
     const lat2 = latlng2.lat * Math.PI / 180;
     const deltaLat = (latlng2.lat - latlng1.lat) * Math.PI / 180;
@@ -2529,46 +2507,29 @@ function calculateDistance(latlng1, latlng2) {
 
 // Get current location and use as start point
 function getCurrentLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                const latlng = L.latLng(position.coords.latitude, position.coords.longitude);
-                
-                // Clear existing markers
-                if (startMarker) {
-                    map.removeLayer(startMarker);
-                }
-                if (endMarker) {
-                    map.removeLayer(endMarker);
-                }
-                if (routeLine) {
-                    map.removeLayer(routeLine);
-                }
-                
-                // Set as start point
-                const greenIcon = L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-                    iconSize: [25, 41],
-                    iconAnchor: [12, 41],
-                    popupAnchor: [1, -34],
-                    shadowSize: [41, 41]
-                });
-                
-                startMarker = L.marker(latlng, { icon: greenIcon })
-                    .addTo(map)
-                    .bindPopup('<b>START (Current Location)</b>').openPopup();
-                
-                map.setView(latlng, 10);
-                clickCount = 1;
-            },
-            function(error) {
-                alert('Unable to get your location. Please ensure location services are enabled.');
-            }
-        );
-    } else {
+    if (!navigator.geolocation) {
         alert('Geolocation is not supported by your browser.');
+        return;
     }
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            if (startMarker) startMarker.setMap(null);
+            if (endMarker) endMarker.setMap(null);
+            if (routeLine) routeLine.setMap(null);
+            startMarker = new google.maps.Marker({
+                position: latLng,
+                map,
+                title: 'START',
+                icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
+            });
+            new google.maps.InfoWindow({ content: '<b>START (Current Location)</b>' }).open(map, startMarker);
+            map.setCenter(latLng);
+            map.setZoom(10);
+            clickCount = 1;
+        },
+        () => { alert('Unable to get your location. Please ensure location services are enabled.'); }
+    );
 }
 
 // Add additional destination input
@@ -4581,10 +4542,10 @@ function calcTotalMiles() {
 
 function onGoogleMapsLoaded() {
     console.log('Google Maps loaded');
-    // Fleet map
-    const mapEl = document.getElementById('dashboard-map');
-    if (mapEl) {
-        new google.maps.Map(mapEl, {
+    // Dashboard fleet map
+    const dashMapEl = document.getElementById('dashboard-map');
+    if (dashMapEl) {
+        new google.maps.Map(dashMapEl, {
             center: { lat: 33.0, lng: -81.0 },
             zoom: 7,
             mapTypeControl: false,
@@ -4592,6 +4553,8 @@ function onGoogleMapsLoaded() {
             fullscreenControl: false
         });
     }
+    // Trip planner map
+    initializeMap();
     // Address autocomplete on trip calculator fields
     initTripCalculatorAutocomplete();
 }
