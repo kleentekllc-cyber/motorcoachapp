@@ -3927,6 +3927,8 @@ function calculateTripDistance() {
     const dropoff = tcAddressStore['mt_dropoffLocation'] || '';
     const milesInput = document.getElementById('mt_miles');
 
+    console.log('[calculateTripDistance] pickup:', pickup, '| dropoff:', dropoff);
+
     if (!pickup || !dropoff) return;
 
     if (milesInput) {
@@ -4365,17 +4367,32 @@ function initAddressAutocomplete(container, onSelect) {
 
     pac.addEventListener('gmp-placeselect', async (event) => {
         const place = event.place;
+        let addr = '';
+
+        // Primary: fetchFields (requires Places API New to be enabled)
         try {
             await place.fetchFields({ fields: ['formattedAddress', 'displayName'] });
-            const addr = place.formattedAddress || place.displayName || '';
+            addr = place.formattedAddress || place.displayName || '';
+        } catch (err) {
+            console.warn('[autocomplete] fetchFields failed for', container.id, err.message || err);
+        }
+
+        // Fallback 1: PlaceAutocompleteElement.value — always populated after selection
+        if (!addr) {
+            addr = pac.value || '';
+        }
+
+        // Fallback 2: shadow DOM input
+        if (!addr) {
+            const inner = (pac.shadowRoot || pac).querySelector('input');
+            addr = inner?.value || '';
+        }
+
+        console.log('[autocomplete]', container.id, '→', addr || '(empty)');
+
+        if (addr) {
             tcAddressStore[container.id] = addr;
             callback();
-        } catch (err) {
-            const inner = pac.querySelector('input');
-            if (inner && inner.value) {
-                tcAddressStore[container.id] = inner.value;
-                callback();
-            }
         }
     });
 }
@@ -4465,6 +4482,8 @@ function calcTotalMiles() {
     const dropoff = tcAddressStore['tcDropoffLoc'];
     const milesEl = document.getElementById('tcTotalMiles');
     const statusEl = document.getElementById('tcMilesStatus');
+
+    console.log('[calcTotalMiles] pickup:', pickup, '| dropoff:', dropoff);
 
     if (!pickup || !dropoff) {
         milesEl.textContent = '—';
